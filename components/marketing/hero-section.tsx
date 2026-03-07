@@ -2,31 +2,18 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowRight,
-  Sparkles,
-  Users,
-  BookOpen,
-  Award,
-} from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AnimatedCounter } from "@/components/marketing/animated-counter";
-
-const stats = [
-  { label: "Students Enrolled", value: "120+", icon: Users },
-  { label: "Courses Delivered", value: "24", icon: BookOpen },
-  { label: "Certifications", value: "86", icon: Award },
-];
 
 export function HeroSection() {
   return (
     <section id="mission" className="relative overflow-hidden">
       {/* Background image */}
       <Image
-        src="https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?w=1920&q=80"
-        alt="Young Black students learning digital skills together in a classroom"
+        src="https://images.unsplash.com/photo-1523240795612-9a1b4cd4f2e7?w=1920&q=80"
+        alt="Young people learning together with hope and enthusiasm for the future"
         fill
         priority
         className="object-cover"
@@ -38,7 +25,7 @@ export function HeroSection() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(56,189,248,0.15)_0%,transparent_50%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(16,185,129,0.1)_0%,transparent_50%)]" />
 
-      <div className="relative mx-auto max-w-6xl px-4 pb-24 pt-20 sm:px-6 md:pb-32 md:pt-28 lg:pb-36 lg:pt-32">
+      <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-20 sm:px-6 md:pb-24 md:pt-28 lg:pb-28 lg:pt-32">
         <div className="flex flex-col items-center text-center">
           <Badge
             className="mb-6 gap-1.5 border-sky-400/20 bg-sky-400/10 px-4 py-1.5 text-sky-300 opacity-0 animate-fade-in-up"
@@ -93,94 +80,22 @@ export function HeroSection() {
             </Button>
           </div>
         </div>
-
-        {/* Stat counters with count-up */}
-        <div
-          className="mx-auto mt-16 grid max-w-lg gap-4 opacity-0 animate-fade-in-up sm:max-w-none sm:grid-cols-3 md:mt-20"
-          style={{ animationDelay: "0.7s", animationFillMode: "forwards" }}
-        >
-          {stats.map((stat, i) => (
-            <div
-              key={stat.label}
-              className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 px-6 py-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-sky-500/15 text-sky-300">
-                <stat.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-white">
-                  <AnimatedCounter
-                    value={stat.value}
-                    duration={1200}
-                    delay={800 + i * 150}
-                  />
-                </p>
-                <p className="text-sm text-blue-200/60">{stat.label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* Layered animated wave divider — flowing water effect */}
-      <div className="absolute bottom-0 left-0 right-0 h-[72px] overflow-hidden">
-        {/* Base wave — solid, main flow */}
-        <div className="absolute inset-0 flex w-[200%] animate-wave-flow">
-          <svg
-            viewBox="0 0 1440 72"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="block h-full w-1/2 shrink-0"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0 72V42C180 18 360 54 540 36C720 18 900 54 1080 36C1260 18 1440 42V72H0Z"
-              className="fill-background"
-            />
-          </svg>
-          <svg
-            viewBox="0 0 1440 72"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="block h-full w-1/2 shrink-0"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0 72V42C180 18 360 54 540 36C720 18 900 54 1080 36C1260 18 1440 42V72H0Z"
-              className="fill-background"
-            />
-          </svg>
-        </div>
-        {/* Overlay wave — offset phase, more transparent */}
-        <div
-          className="absolute inset-0 flex w-[200%] animate-wave-flow-slow opacity-60"
-          style={{ animationDelay: "-5s" }}
+      {/* Clean wave divider — single smooth curve */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 overflow-hidden">
+        <svg
+          viewBox="0 0 1440 64"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="absolute inset-0 h-full w-full"
+          preserveAspectRatio="none"
         >
-          <svg
-            viewBox="0 0 1440 72"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="block h-full w-1/2 shrink-0"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0 72V48C180 24 360 60 540 42C720 24 900 60 1080 42C1260 24 1440 48V72H0Z"
-              className="fill-background"
-            />
-          </svg>
-          <svg
-            viewBox="0 0 1440 72"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="block h-full w-1/2 shrink-0"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0 72V48C180 24 360 60 540 42C720 24 900 60 1080 42C1260 24 1440 48V72H0Z"
-              className="fill-background"
-            />
-          </svg>
-        </div>
+          <path
+            d="M0 64V32c120-16 240 16 360 8 120-8 240-24 360-8s240 24 360 8c120-16 240-8 360 8V64H0Z"
+            className="fill-background"
+          />
+        </svg>
       </div>
     </section>
   );

@@ -75,7 +75,7 @@ async function SubmissionsTable() {
         </thead>
         <tbody>
           {submissions.map((s) => (
-            <tr key={s.id} className="border-b last:border-b-0 even:bg-muted/40 transition-colors hover:bg-muted/60">
+            <tr key={s.id} className="border-b last:border-b-0 even:bg-muted/60 transition-colors hover:bg-muted/80">
               <td className="px-4 py-3">
                 <p className="font-medium">
                   {s.lessons?.courses?.title ?? "—"}

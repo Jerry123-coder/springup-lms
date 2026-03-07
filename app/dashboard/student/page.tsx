@@ -28,8 +28,8 @@ async function CourseGrid() {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {(courses as Course[]).map((course) => (
-        <CourseCard key={course.id} course={course} />
+      {(courses as Course[]).map((course, i) => (
+        <CourseCard key={course.id} course={course} index={i} />
       ))}
     </div>
   );
