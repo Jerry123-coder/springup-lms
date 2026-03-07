@@ -12,7 +12,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: object }[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -40,12 +40,12 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect authenticated users away from login page
   if (pathname === "/login" && user) {
-    const { data: profile } = await supabase
-      .from("profiles")
+    const { data } = await (supabase.from("profiles") as any)
       .select("role")
       .eq("id", user.id)
       .single();
 
+    const profile = data as { role?: "admin" | "instructor" | "student" } | null;
     const role = profile?.role ?? "student";
     const url = request.nextUrl.clone();
 

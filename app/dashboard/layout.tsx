@@ -22,15 +22,15 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
+  const { data } = await (supabase.from("profiles") as any)
     .select("role, full_name, email")
     .eq("id", user.id)
     .single();
 
-  const role: UserRole = profile?.role ?? "student";
+  const profileData = data as { role?: UserRole; full_name?: string; email?: string } | null;
+  const role: UserRole = profileData?.role ?? "student";
   const userName =
-    profile?.full_name || profile?.email || user.email || "User";
+    profileData?.full_name || profileData?.email || user.email || "User";
 
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";

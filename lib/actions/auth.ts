@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { UserRole } from "@/lib/types/database";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
@@ -27,13 +28,12 @@ export async function login(formData: FormData) {
     redirect("/login?error=Something+went+wrong");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
+  const result = await (supabase.from("profiles") as any)
     .select("role")
     .eq("id", user.id)
     .single();
 
-  const role = profile?.role ?? "student";
+  const role: UserRole = (result?.data as { role?: UserRole } | null)?.role ?? "student";
 
   if (role === "admin") {
     redirect("/dashboard/admin");

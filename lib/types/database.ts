@@ -87,11 +87,43 @@ export interface SubmissionInsert {
 }
 
 // ─── Update types (what UPDATE expects) ─────────────────────
+// Supabase expects: id/created_at as never, other columns optional
 
-export type ProfileUpdate = Partial<Omit<Profile, "id" | "created_at">>;
-export type CourseUpdate = Partial<Omit<Course, "id" | "created_at">>;
-export type LessonUpdate = Partial<Omit<Lesson, "id" | "created_at">>;
-export type SubmissionUpdate = Partial<Omit<Submission, "id" | "created_at">>;
+export interface ProfileUpdate {
+  id?: never;
+  email?: string;
+  full_name?: string;
+  role?: UserRole;
+  created_at?: never;
+}
+
+export interface CourseUpdate {
+  id?: never;
+  title?: string;
+  pillar?: CoursePillar;
+  description?: string;
+  created_at?: never;
+}
+
+export interface LessonUpdate {
+  id?: never;
+  course_id?: string;
+  title?: string;
+  content?: string;
+  order_index?: number;
+  created_at?: never;
+}
+
+export interface SubmissionUpdate {
+  id?: never;
+  student_id?: string;
+  lesson_id?: string;
+  file_url?: string;
+  status?: SubmissionStatus;
+  grade?: number | null;
+  feedback?: string;
+  created_at?: never;
+}
 
 // ─── Supabase Database type for typed client ────────────────
 

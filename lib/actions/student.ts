@@ -36,7 +36,7 @@ export async function uploadSubmission(formData: FormData) {
     data: { publicUrl },
   } = supabase.storage.from("submissions").getPublicUrl(filePath);
 
-  const { error: insertError } = await supabase.from("submissions").insert({
+  const { error: insertError } = await (supabase.from("submissions") as any).insert({
     student_id: user.id,
     lesson_id: lessonId,
     file_url: publicUrl,
