@@ -28,12 +28,12 @@ export async function login(formData: FormData) {
     redirect("/login?error=Something+went+wrong");
   }
 
-  const result = await (supabase.from("profiles") as any)
+  const { data } = await (supabase.from("profiles") as any)
     .select("role")
     .eq("id", user.id)
     .single();
 
-  const role: UserRole = (result?.data as { role?: UserRole } | null)?.role ?? "student";
+  const role: UserRole = ((data ?? null) as { role?: UserRole } | null)?.role ?? "student";
 
   if (role === "admin") {
     redirect("/dashboard/admin");

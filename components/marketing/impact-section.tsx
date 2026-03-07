@@ -45,8 +45,10 @@ export function ImpactSection() {
         alt="Young Black men engaged in collaborative learning and growth"
         fill
         sizes="100vw"
-        className="object-cover opacity-25"
+        className="object-cover opacity-20"
       />
+      {/* Dark overlay for text legibility */}
+      <div className="absolute inset-0 bg-[#0f2847]/70" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mb-14 text-center">

@@ -47,7 +47,7 @@ async function UsersTable() {
         </thead>
         <tbody>
           {users.map((u) => (
-            <tr key={u.id} className="border-b last:border-b-0">
+            <tr key={u.id} className="border-b last:border-b-0 even:bg-muted/40 transition-colors hover:bg-muted/60">
               <td className="px-4 py-3 font-medium">
                 {u.full_name || "—"}
               </td>

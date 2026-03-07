@@ -50,7 +50,7 @@ async function CoursesTable() {
         </thead>
         <tbody>
           {courses.map((c) => (
-            <tr key={c.id} className="border-b last:border-b-0">
+            <tr key={c.id} className="border-b last:border-b-0 even:bg-muted/40 transition-colors hover:bg-muted/60">
               <td className="px-4 py-3 font-medium">{c.title}</td>
               <td className="px-4 py-3">
                 <Badge variant="secondary">{c.pillar}</Badge>

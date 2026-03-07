@@ -33,7 +33,7 @@ export function HeroSection() {
         sizes="100vw"
       />
       {/* Dark overlay — stronger for text legibility */}
-      <div className="absolute inset-0 bg-[#0f2847]/92" />
+      <div className="absolute inset-0 bg-[#0f2847]/96" />
       {/* Subtle gradient accents */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(56,189,248,0.15)_0%,transparent_50%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(16,185,129,0.1)_0%,transparent_50%)]" />

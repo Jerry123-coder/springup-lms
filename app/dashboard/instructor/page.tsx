@@ -83,7 +83,7 @@ async function GradingQueue() {
               </thead>
               <tbody>
                 {pending.map((sub) => (
-                  <tr key={sub.id} className="border-b last:border-b-0">
+                  <tr key={sub.id} className="border-b last:border-b-0 even:bg-muted/40 transition-colors hover:bg-muted/60">
                     <td className="px-4 py-3">
                       <p className="font-medium">
                         {sub.profiles?.full_name || sub.profiles?.email || "—"}
@@ -136,7 +136,7 @@ async function GradingQueue() {
               </thead>
               <tbody>
                 {reviewed.map((sub) => (
-                  <tr key={sub.id} className="border-b last:border-b-0">
+                  <tr key={sub.id} className="border-b last:border-b-0 even:bg-muted/40 transition-colors hover:bg-muted/60">
                     <td className="px-4 py-3">
                       <p className="font-medium">
                         {sub.profiles?.full_name || sub.profiles?.email || "—"}
