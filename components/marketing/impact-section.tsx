@@ -65,7 +65,7 @@ export function ImpactSection() {
             Numbers That Tell Our Story
           </h2>
           <p
-            className="mx-auto mt-5 max-w-2xl text-lg text-blue-200/60 opacity-0 animate-fade-in-up"
+            className="mx-auto mt-5 max-w-2xl text-lg text-blue-100/75 opacity-0 animate-fade-in-up"
             style={{ animationDelay: "0.35s", animationFillMode: "forwards" }}
           >
             Every statistic represents a life being reshaped. Here is where we
@@ -77,28 +77,36 @@ export function ImpactSection() {
           {metrics.map((m, i) => (
             <div
               key={m.label}
-              className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm opacity-0 animate-fade-in-up transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/10"
+              className="rounded-2xl border border-white/10 bg-white/6 p-6 backdrop-blur-sm opacity-0 animate-fade-in-up transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/10"
               style={{
                 animationDelay: `${0.5 + i * 0.1}s`,
                 animationFillMode: "forwards",
               }}
             >
-              <div
-                className={`mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 ${m.color}`}
-              >
-                <m.icon className="h-5 w-5" />
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 ${m.color}`}
+                >
+                  <m.icon className="h-5 w-5" />
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span className="text-3xl font-extrabold leading-none text-white">
+                      <AnimatedCounter
+                        value={m.value}
+                        duration={1200}
+                        delay={600 + i * 120}
+                      />
+                    </span>
+                    <span className="text-sm font-semibold text-blue-100/85">
+                      {m.label}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <p className="text-3xl font-extrabold text-white">
-                <AnimatedCounter
-                  value={m.value}
-                  duration={1200}
-                  delay={600 + i * 120}
-                />
-              </p>
-              <p className="mt-1 text-sm font-semibold text-sky-300">
-                {m.label}
-              </p>
-              <p className="mt-2 text-xs leading-relaxed text-blue-200/50">
+
+              <p className="mt-3 text-xs leading-relaxed text-blue-100/65">
                 {m.description}
               </p>
             </div>

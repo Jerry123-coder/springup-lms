@@ -27,11 +27,11 @@ export function CTASection() {
           Even a small contribution creates ripples of transformation.
         </p>
 
-        <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+        <div className="mt-10 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-center">
           <SupportDrawer>
             <Button
               size="lg"
-              className="gap-2 bg-pink-500 text-base font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:bg-pink-400 active:scale-[0.98]"
+              className="w-full gap-2 bg-sky-500 text-base font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:bg-sky-400 active:scale-[0.98] sm:w-auto"
             >
               <Heart className="h-4 w-4" />
               Donate Now
@@ -41,7 +41,7 @@ export function CTASection() {
           <Button
             size="lg"
             variant="outline"
-            className="gap-2 border-white/20 bg-white/5 text-base text-blue-100 transition-all duration-200 hover:scale-[1.02] hover:bg-white/10 hover:text-white active:scale-[0.98]"
+            className="w-full gap-2 border-white/20 bg-white/5 text-base text-blue-100 transition-all duration-200 hover:scale-[1.02] hover:bg-white/10 hover:text-white active:scale-[0.98] sm:w-auto"
             asChild
           >
             <Link href="/login">

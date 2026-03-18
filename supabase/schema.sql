@@ -11,6 +11,9 @@
 DROP TABLE IF EXISTS public.submissions CASCADE;
 DROP TABLE IF EXISTS public.lessons     CASCADE;
 DROP TABLE IF EXISTS public.courses     CASCADE;
+DROP TABLE IF EXISTS public.learning_block_courses CASCADE;
+DROP TABLE IF EXISTS public.learning_blocks        CASCADE;
+DROP TABLE IF EXISTS public.learning_paths         CASCADE;
 DROP TABLE IF EXISTS public.profiles    CASCADE;
 
 -- Drop leftover tables from the original project
@@ -19,6 +22,7 @@ DROP TABLE IF EXISTS public.modules CASCADE;
 -- Drop old enums so they can be recreated cleanly
 DROP TYPE IF EXISTS public.user_role         CASCADE;
 DROP TYPE IF EXISTS public.course_pillar     CASCADE;
+DROP TYPE IF EXISTS public.course_category  CASCADE;
 DROP TYPE IF EXISTS public.submission_status CASCADE;
 
 -- Drop old functions
@@ -36,6 +40,13 @@ CREATE TYPE public.course_pillar AS ENUM (
   'Career Readiness',
   'Life Skills',
   'Cultural Identity'
+);
+
+CREATE TYPE public.course_category AS ENUM (
+  'Word',
+  'Excel',
+  'Slides',
+  'Other'
 );
 
 CREATE TYPE public.submission_status AS ENUM ('pending', 'reviewed');
@@ -59,8 +70,37 @@ CREATE TABLE public.courses (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title       TEXT NOT NULL,
   pillar      public.course_pillar NOT NULL,
+  category    public.course_category NOT NULL DEFAULT 'Other',
   description TEXT NOT NULL DEFAULT '',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- learning_paths — a named learning path for the programme
+CREATE TABLE public.learning_paths (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- learning_blocks — ordered blocks inside a learning path
+CREATE TABLE public.learning_blocks (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  path_id     UUID NOT NULL REFERENCES public.learning_paths(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  subtitle    TEXT NOT NULL DEFAULT '',
+  order_index INTEGER NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- learning_block_courses — ordered courses inside a learning block
+CREATE TABLE public.learning_block_courses (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  block_id    UUID NOT NULL REFERENCES public.learning_blocks(id) ON DELETE CASCADE,
+  course_id   UUID NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
+  order_index INTEGER NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (block_id, course_id)
 );
 
 -- lessons — ordered content within a course
@@ -138,6 +178,9 @@ ALTER TABLE public.profiles    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courses     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.lessons     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.learning_paths ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.learning_blocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.learning_block_courses ENABLE ROW LEVEL SECURITY;
 
 -- ── Helper: look up the current user's role ─────────────────
 CREATE OR REPLACE FUNCTION public.get_user_role()
@@ -195,6 +238,59 @@ CREATE POLICY "Admins can update courses"
 -- Only admins can delete courses
 CREATE POLICY "Admins can delete courses"
   ON public.courses FOR DELETE
+  USING (public.get_user_role() = 'admin');
+
+
+-- ── LEARNING PATH policies ──────────────────────────────────
+
+-- All authenticated users can read learning paths/blocks
+CREATE POLICY "Authenticated users can view learning paths"
+  ON public.learning_paths FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can view learning blocks"
+  ON public.learning_blocks FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can view learning block courses"
+  ON public.learning_block_courses FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+-- Only admins can manage learning paths/blocks
+CREATE POLICY "Admins can insert learning paths"
+  ON public.learning_paths FOR INSERT
+  WITH CHECK (public.get_user_role() = 'admin');
+
+CREATE POLICY "Admins can update learning paths"
+  ON public.learning_paths FOR UPDATE
+  USING (public.get_user_role() = 'admin');
+
+CREATE POLICY "Admins can delete learning paths"
+  ON public.learning_paths FOR DELETE
+  USING (public.get_user_role() = 'admin');
+
+CREATE POLICY "Admins can insert learning blocks"
+  ON public.learning_blocks FOR INSERT
+  WITH CHECK (public.get_user_role() = 'admin');
+
+CREATE POLICY "Admins can update learning blocks"
+  ON public.learning_blocks FOR UPDATE
+  USING (public.get_user_role() = 'admin');
+
+CREATE POLICY "Admins can delete learning blocks"
+  ON public.learning_blocks FOR DELETE
+  USING (public.get_user_role() = 'admin');
+
+CREATE POLICY "Admins can insert learning block courses"
+  ON public.learning_block_courses FOR INSERT
+  WITH CHECK (public.get_user_role() = 'admin');
+
+CREATE POLICY "Admins can update learning block courses"
+  ON public.learning_block_courses FOR UPDATE
+  USING (public.get_user_role() = 'admin');
+
+CREATE POLICY "Admins can delete learning block courses"
+  ON public.learning_block_courses FOR DELETE
   USING (public.get_user_role() = 'admin');
 
 

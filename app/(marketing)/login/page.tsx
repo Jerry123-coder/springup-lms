@@ -17,20 +17,22 @@ interface LoginPageProps {
     error?: string;
     message?: string;
     tab?: string;
+    next?: string;
   }>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const isSignUp = params.tab === "signup";
+  const next = params.next;
 
   return (
     <div className="relative flex min-h-[calc(100svh-8rem)] items-center justify-center px-4">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#0f2847]/5 via-transparent to-emerald-50/50" />
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-[#0f2847]/5 via-transparent to-emerald-50/50" />
 
       <Card className="relative w-full max-w-sm border-sky-100 shadow-lg shadow-sky-500/5">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-emerald-400">
+          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-sky-400 to-emerald-400">
             <GraduationCap className="h-5 w-5 text-white" />
           </div>
           <CardTitle className="text-xl">
@@ -60,6 +62,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           {isSignUp ? (
             <form action={signup} className="space-y-4">
+              {next ? <input type="hidden" name="next" value={next} /> : null}
               <div className="space-y-2">
                 <label
                   htmlFor="full_name"
@@ -124,6 +127,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </form>
           ) : (
             <form action={login} className="space-y-4">
+              {next ? <input type="hidden" name="next" value={next} /> : null}
               <div className="space-y-2">
                 <label
                   htmlFor="email"
@@ -171,6 +175,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </p>
             </form>
           )}
+
+          <div className="mt-6">
+            <Button variant="outline" className="w-full" asChild>
+              <Link href="/">Back to Home</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

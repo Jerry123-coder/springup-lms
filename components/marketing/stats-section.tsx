@@ -28,6 +28,24 @@ export function StatsSection() {
   return (
     <section ref={ref} className="relative -mt-8 bg-background py-16 md:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div
+          className="mb-10 text-center md:mb-12"
+          style={
+            inView
+              ? {
+                  animation: "fade-in-up 0.6s ease-out forwards",
+                  animationFillMode: "forwards",
+                }
+              : { opacity: 0 }
+          }
+        >
+          <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            Real impact, real numbers
+          </h2>
+          <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
+            Every statistic represents a life being reshaped through education and opportunity at Roman Ridge.
+          </p>
+        </div>
         <div className="grid max-w-lg gap-4 sm:max-w-none sm:grid-cols-3">
           {stats.map((stat, i) => (
             <div

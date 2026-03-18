@@ -3,9 +3,9 @@ import { BookOpen } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { CourseCard } from "@/components/dashboard/course-card";
 import { CourseGridSkeleton } from "@/components/dashboard/classroom-skeleton";
-import type { Course } from "@/lib/types/database";
+import { StudentCourseBrowser } from "@/components/dashboard/student-course-browser";
+import type { Course, LearningBlock, LearningBlockCourse } from "@/lib/types/database";
 
 async function CourseGrid() {
   const supabase = await createClient();
@@ -26,12 +26,42 @@ async function CourseGrid() {
     );
   }
 
+  const { data: blocksData } = await supabase
+    .from("learning_blocks")
+    .select("*")
+    .order("order_index", { ascending: true });
+
+  const { data: blockCoursesData } = await supabase
+    .from("learning_block_courses")
+    .select("*")
+    .order("order_index", { ascending: true });
+
+  const courseById = new Map<string, Course>();
+  for (const c of courses as Course[]) courseById.set(c.id, c);
+
+  const blocks = (blocksData ?? []) as LearningBlock[];
+  const blockCourses = (blockCoursesData ?? []) as LearningBlockCourse[];
+
+  const coursesByBlock = new Map<string, Course[]>();
+  for (const bc of blockCourses) {
+    const c = courseById.get(bc.course_id);
+    if (!c) continue;
+    const existing = coursesByBlock.get(bc.block_id) ?? [];
+    existing.push(c);
+    coursesByBlock.set(bc.block_id, existing);
+  }
+
+  const learningPath = blocks
+    .map((b) => ({
+      id: b.id,
+      title: b.title,
+      subtitle: b.subtitle,
+      courses: coursesByBlock.get(b.id) ?? [],
+    }))
+    .filter((b) => b.courses.length > 0);
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {(courses as Course[]).map((course, i) => (
-        <CourseCard key={course.id} course={course} index={i} />
-      ))}
-    </div>
+    <StudentCourseBrowser courses={courses as Course[]} learningPath={learningPath} />
   );
 }
 
@@ -43,7 +73,7 @@ export default function StudentClassroomPage() {
         <div>
           <h2 className="text-lg font-semibold">Your Courses</h2>
           <p className="text-sm text-muted-foreground">
-            Select a course to view its lessons and submit assignments.
+            Follow the recommended learning path or explore any course.
           </p>
         </div>
         <Suspense fallback={<CourseGridSkeleton />}>

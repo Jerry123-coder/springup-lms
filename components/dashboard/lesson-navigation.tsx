@@ -24,7 +24,7 @@ export function LessonNavigation({
       {prev ? (
         <Button variant="outline" size="sm" className="gap-1.5" asChild>
           <Link
-            href={`/dashboard/student/courses/${courseId}?lesson=${prev.id}`}
+            href={`/dashboard/student/courses/${courseId}/lessons/${prev.id}`}
             className="group"
           >
             <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
@@ -37,7 +37,7 @@ export function LessonNavigation({
       {next ? (
         <Button variant="outline" size="sm" className="gap-1.5" asChild>
           <Link
-            href={`/dashboard/student/courses/${courseId}?lesson=${next.id}`}
+            href={`/dashboard/student/courses/${courseId}/lessons/${next.id}`}
             className="group"
           >
             Next: {next.title}

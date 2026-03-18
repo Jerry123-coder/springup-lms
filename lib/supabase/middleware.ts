@@ -35,12 +35,14 @@ export async function updateSession(request: NextRequest) {
   if (pathname.startsWith("/dashboard") && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
 
   // Redirect authenticated users away from login page
   if (pathname === "/login" && user) {
-    const { data } = await (supabase.from("profiles") as any)
+    const { data } = await supabase
+      .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();

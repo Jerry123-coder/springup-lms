@@ -52,13 +52,50 @@ export function HowItWorks() {
           </p>
         </div>
 
-        <div className="relative grid gap-8 md:grid-cols-4">
-          {/* Connecting line (desktop) */}
-          <div className="pointer-events-none absolute left-0 right-0 top-[3.25rem] hidden h-0.5 bg-gradient-to-r from-sky-200 via-blue-200 to-emerald-200 dark:from-sky-800 dark:via-blue-800 dark:to-emerald-800 md:block" />
+        {/* Mobile: vertical journey timeline */}
+        <div className="relative grid gap-4 md:hidden">
+          <div className="pointer-events-none absolute bottom-2 left-6 top-2 w-px bg-linear-to-b from-sky-200 via-blue-200 to-emerald-200 dark:from-sky-800 dark:via-blue-800 dark:to-emerald-800" />
 
           {steps.map((s) => (
-            <div key={s.step} className="group relative text-center transition-all duration-300 hover:-translate-y-1">
-              <div className="mx-auto mb-5 flex h-[6.5rem] w-[6.5rem] flex-col items-center justify-center rounded-2xl border-2 border-border bg-card shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-sky-200 dark:group-hover:border-sky-800">
+            <div
+              key={s.step}
+              className="group relative flex gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div className="relative z-10 mt-0.5 flex shrink-0 items-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-border bg-background shadow-sm transition-all duration-300 group-hover:border-sky-200 group-hover:shadow-md dark:group-hover:border-sky-800">
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl text-white transition-transform duration-300 group-hover:scale-110 ${s.color}`}
+                  >
+                    <s.icon className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="min-w-0">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Step {s.step}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold">{s.title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {s.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: clean 4-step flow */}
+        <div className="relative hidden gap-8 md:grid md:grid-cols-4">
+          <div className="pointer-events-none absolute left-0 right-0 top-13 h-0.5 bg-linear-to-r from-sky-200 via-blue-200 to-emerald-200 dark:from-sky-800 dark:via-blue-800 dark:to-emerald-800" />
+
+          {steps.map((s) => (
+            <div
+              key={s.step}
+              className="group relative text-center transition-all duration-300 hover:-translate-y-1"
+            >
+              <div className="mx-auto mb-5 flex h-26 w-26 flex-col items-center justify-center rounded-2xl border-2 border-border bg-card shadow-sm transition-all duration-300 group-hover:border-sky-200 group-hover:shadow-md dark:group-hover:border-sky-800">
                 <div
                   className={`mb-1.5 flex h-10 w-10 items-center justify-center rounded-lg text-white transition-transform duration-300 group-hover:scale-110 ${s.color}`}
                 >

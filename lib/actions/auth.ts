@@ -9,6 +9,7 @@ export async function login(formData: FormData) {
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const next = formData.get("next") as string | null;
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -16,7 +17,8 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    const nextParam = next ? `&next=${encodeURIComponent(next)}` : "";
+    redirect(`/login?error=${encodeURIComponent(error.message)}${nextParam}`);
   }
 
   // Fetch the user's role to redirect to the correct dashboard
@@ -28,12 +30,17 @@ export async function login(formData: FormData) {
     redirect("/login?error=Something+went+wrong");
   }
 
-  const { data } = await (supabase.from("profiles") as any)
+  const { data } = await supabase
+    .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
 
   const role: UserRole = ((data ?? null) as { role?: UserRole } | null)?.role ?? "student";
+
+  if (next && next.startsWith("/dashboard")) {
+    redirect(next);
+  }
 
   if (role === "admin") {
     redirect("/dashboard/admin");
@@ -50,6 +57,7 @@ export async function signup(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const fullName = formData.get("full_name") as string;
+  const next = formData.get("next") as string | null;
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -60,7 +68,8 @@ export async function signup(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}&tab=signup`);
+    const nextParam = next ? `&next=${encodeURIComponent(next)}` : "";
+    redirect(`/login?error=${encodeURIComponent(error.message)}&tab=signup${nextParam}`);
   }
 
   redirect("/login?message=Check+your+email+to+confirm+your+account");

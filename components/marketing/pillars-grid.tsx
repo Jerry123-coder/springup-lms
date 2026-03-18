@@ -76,12 +76,16 @@ export function PillarsGrid() {
               className={`group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${pillar.className}`}
             >
               <CardHeader>
-                <div
-                  className={`mb-2 flex h-10 w-10 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110 ${pillar.iconBg}`}
-                >
-                  <pillar.icon className="h-5 w-5" />
+                <div className="mb-2 flex items-center gap-3">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110 ${pillar.iconBg}`}
+                  >
+                    <pillar.icon className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-xl leading-none">
+                    {pillar.title}
+                  </CardTitle>
                 </div>
-                <CardTitle className="text-xl">{pillar.title}</CardTitle>
                 <CardDescription className="text-sm leading-relaxed">
                   {pillar.description}
                 </CardDescription>

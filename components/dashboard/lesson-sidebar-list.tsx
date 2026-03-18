@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { FileText } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -15,8 +15,8 @@ export function LessonSidebarList({
   lessons: Lesson[];
   courseId: string;
 }) {
-  const searchParams = useSearchParams();
-  const activeLessonId = searchParams.get("lesson");
+  const params = useParams<{ lessonId?: string }>();
+  const activeLessonId = params?.lessonId ?? null;
 
   return (
     <nav className="space-y-1">
@@ -34,7 +34,7 @@ export function LessonSidebarList({
             asChild
           >
             <Link
-              href={`/dashboard/student/courses/${courseId}?lesson=${lesson.id}`}
+              href={`/dashboard/student/courses/${courseId}/lessons/${lesson.id}`}
               className="flex items-center gap-2.5"
             >
               <span

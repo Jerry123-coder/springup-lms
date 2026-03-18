@@ -8,6 +8,8 @@ export type CoursePillar =
   | "Life Skills"
   | "Cultural Identity";
 
+export type CourseCategory = "Word" | "Excel" | "Slides" | "Other";
+
 export type SubmissionStatus = "pending" | "reviewed";
 
 // ─── Row types (what SELECT returns) ────────────────────────
@@ -24,7 +26,32 @@ export interface Course {
   id: string;
   title: string;
   pillar: CoursePillar;
+  category: CourseCategory;
   description: string;
+  created_at: string;
+}
+
+export interface LearningPath {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+}
+
+export interface LearningBlock {
+  id: string;
+  path_id: string;
+  title: string;
+  subtitle: string;
+  order_index: number;
+  created_at: string;
+}
+
+export interface LearningBlockCourse {
+  id: string;
+  block_id: string;
+  course_id: string;
+  order_index: number;
   created_at: string;
 }
 
@@ -62,6 +89,7 @@ export interface CourseInsert {
   id?: string;
   title: string;
   pillar: CoursePillar;
+  category?: CourseCategory;
   description?: string;
   created_at?: string;
 }
@@ -101,6 +129,7 @@ export interface CourseUpdate {
   id?: never;
   title?: string;
   pillar?: CoursePillar;
+  category?: CourseCategory;
   description?: string;
   created_at?: never;
 }
@@ -140,6 +169,21 @@ export interface Database {
         Insert: CourseInsert;
         Update: CourseUpdate;
       };
+      learning_paths: {
+        Row: LearningPath;
+        Insert: Omit<LearningPath, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<Omit<LearningPath, "id" | "created_at">> & { id?: never; created_at?: never };
+      };
+      learning_blocks: {
+        Row: LearningBlock;
+        Insert: Omit<LearningBlock, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<Omit<LearningBlock, "id" | "created_at">> & { id?: never; created_at?: never };
+      };
+      learning_block_courses: {
+        Row: LearningBlockCourse;
+        Insert: Omit<LearningBlockCourse, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<Omit<LearningBlockCourse, "id" | "created_at">> & { id?: never; created_at?: never };
+      };
       lessons: {
         Row: Lesson;
         Insert: LessonInsert;
@@ -154,6 +198,7 @@ export interface Database {
     Enums: {
       user_role: UserRole;
       course_pillar: CoursePillar;
+      course_category: CourseCategory;
       submission_status: SubmissionStatus;
     };
   };

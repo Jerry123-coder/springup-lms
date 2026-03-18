@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { GraduationCap, Heart, Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,35 +17,81 @@ const navLinks = [
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
+  useEffect(() => {
+    if (!isHome) {
+      setActiveSection(null);
+      return;
+    }
+    const sectionIds = navLinks.map((l) => l.href.slice(1));
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const viewportMid = scrollY + window.innerHeight * 0.35;
+
+      let current: string | null = null;
+      for (const id of sectionIds) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const { top, bottom } = el.getBoundingClientRect();
+        const elTop = top + scrollY;
+        const elBottom = bottom + scrollY;
+        if (viewportMid >= elTop && viewportMid <= elBottom) {
+          current = id;
+        }
+      }
+      if (!current && sectionIds.length > 0) {
+        current =
+          scrollY < 100 ? sectionIds[0] : sectionIds[sectionIds.length - 1];
+      }
+      setActiveSection(current);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isHome]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0f2847]/60 backdrop-blur-xl saturate-150">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0f2847]/80 backdrop-blur-xl">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="group flex items-center gap-2.5 transition-opacity hover:opacity-90">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-emerald-400 transition-transform duration-200 group-hover:scale-105">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-sky-400 to-emerald-400 transition-transform duration-200 group-hover:scale-105">
             <GraduationCap className="h-5 w-5 text-white" />
           </div>
           <span className="text-lg font-bold text-white">Spring Up</span>
         </Link>
 
         <div className="hidden items-center gap-1 md:flex">
-          {navLinks.map((link) => (
-            <Button
-              key={link.href}
-              variant="ghost"
-              size="sm"
-              className="text-blue-100/80 transition-colors hover:bg-white/10 hover:text-white"
-              asChild
-            >
-              <a href={link.href}>{link.label}</a>
-            </Button>
-          ))}
+          {navLinks.map((link) => {
+            const sectionId = link.href.slice(1);
+            const isActive = activeSection === sectionId;
+            const href = isHome ? link.href : `/${link.href}`;
+            return (
+              <Button
+                key={link.href}
+                variant="ghost"
+                size="sm"
+                className={`font-medium transition-colors hover:bg-white/10 hover:text-white ${
+                  isActive
+                    ? "bg-white/15 text-white"
+                    : "text-blue-100/90"
+                }`}
+                asChild
+              >
+                <Link href={href}>{link.label}</Link>
+              </Button>
+            );
+          })}
 
           <SupportDrawer>
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 text-pink-400 transition-colors hover:bg-pink-400/10 hover:text-pink-300"
+              className="gap-1.5 font-medium text-pink-400 transition-colors hover:bg-pink-400/10 hover:text-pink-300"
             >
               <Heart className="h-3.5 w-3.5" />
               Support Us
@@ -83,24 +130,33 @@ export function Navbar() {
       </nav>
 
       {mobileOpen && (
-        <div className="border-t border-white/10 bg-[#0f2847]/80 px-4 pb-4 pt-2 backdrop-blur-xl md:hidden">
+        <div className="border-t border-white/10 bg-[#0f2847] px-4 pb-4 pt-2 backdrop-blur-xl md:hidden">
           <div className="flex flex-col gap-1">
-            {navLinks.map((link) => (
-              <Button
-                key={link.href}
-                variant="ghost"
-                className="justify-start text-blue-100/80 hover:bg-white/10 hover:text-white"
-                asChild
-                onClick={() => setMobileOpen(false)}
-              >
-                <a href={link.href}>{link.label}</a>
-              </Button>
-            ))}
+            {navLinks.map((link) => {
+              const sectionId = link.href.slice(1);
+              const isActive = activeSection === sectionId;
+              const href = isHome ? link.href : `/${link.href}`;
+              return (
+                <Button
+                  key={link.href}
+                  variant="ghost"
+                  className={`justify-start font-medium transition-colors hover:bg-white/10 hover:text-white ${
+                    isActive
+                      ? "bg-white/15 text-white"
+                      : "text-blue-100/90"
+                  }`}
+                  asChild
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Link href={href}>{link.label}</Link>
+                </Button>
+              );
+            })}
 
             <SupportDrawer>
               <Button
                 variant="ghost"
-                className="justify-start gap-1.5 text-pink-400 transition-colors hover:bg-pink-400/10"
+                className="justify-start gap-1.5 font-medium text-pink-400 hover:bg-pink-400/10 hover:text-pink-300"
               >
                 <Heart className="h-3.5 w-3.5" />
                 Support Us

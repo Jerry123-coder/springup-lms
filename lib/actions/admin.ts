@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { UserRole, CoursePillar, Profile } from "@/lib/types/database";
+import type { UserRole, CourseCategory, CoursePillar, Profile } from "@/lib/types/database";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -11,10 +11,7 @@ async function requireAdmin() {
   } = await supabase.auth.getUser();
   if (!user) return { supabase: null as never, error: "Not authenticated" };
 
-  const { data } = await (supabase.from("profiles") as any)
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
 
   const profile = data as Profile | null;
   if (profile?.role !== "admin")
@@ -36,8 +33,7 @@ export async function updateUserRole(formData: FormData) {
     return { error: "Invalid user ID or role" };
   }
 
-  // Supabase client infers Insert/Update params as never; cast table to bypass (Database types are correct)
-  const { error } = await (supabase.from("profiles") as any).update({ role }).eq("id", userId);
+  const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
 
   if (error) return { error: error.message };
 
@@ -54,11 +50,17 @@ export async function createCourse(formData: FormData) {
 
   const title = formData.get("title") as string;
   const pillar = formData.get("pillar") as CoursePillar;
+  const category = (formData.get("category") as CourseCategory) || "Other";
   const description = (formData.get("description") as string) || "";
 
   if (!title || !pillar) return { error: "Title and pillar are required" };
 
-  const { error } = await (supabase.from("courses") as any).insert({ title, pillar, description });
+  const { error } = await supabase.from("courses").insert({
+    title,
+    pillar,
+    category,
+    description,
+  });
 
   if (error) return { error: error.message };
 
@@ -74,12 +76,16 @@ export async function updateCourse(formData: FormData) {
   const courseId = formData.get("course_id") as string;
   const title = formData.get("title") as string;
   const pillar = formData.get("pillar") as CoursePillar;
+  const category = (formData.get("category") as CourseCategory) || "Other";
   const description = (formData.get("description") as string) || "";
 
   if (!courseId || !title || !pillar)
     return { error: "Course ID, title, and pillar are required" };
 
-  const { error } = await (supabase.from("courses") as any).update({ title, pillar, description }).eq("id", courseId);
+  const { error } = await supabase
+    .from("courses")
+    .update({ title, pillar, category, description })
+    .eq("id", courseId);
 
   if (error) return { error: error.message };
 
@@ -121,7 +127,7 @@ export async function createLesson(formData: FormData) {
   if (!courseId || !title)
     return { error: "Course ID and title are required" };
 
-  const { error } = await (supabase.from("lessons") as any).insert({
+  const { error } = await supabase.from("lessons").insert({
     course_id: courseId,
     title,
     content,
@@ -147,7 +153,10 @@ export async function updateLesson(formData: FormData) {
   if (!lessonId || !title)
     return { error: "Lesson ID and title are required" };
 
-  const { error } = await (supabase.from("lessons") as any).update({ title, content, order_index: orderIndex }).eq("id", lessonId);
+  const { error } = await supabase
+    .from("lessons")
+    .update({ title, content, order_index: orderIndex })
+    .eq("id", lessonId);
 
   if (error) return { error: error.message };
 

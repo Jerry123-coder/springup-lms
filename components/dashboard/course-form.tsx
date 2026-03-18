@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createCourse, updateCourse } from "@/lib/actions/admin";
-import type { Course, CoursePillar } from "@/lib/types/database";
+import type { Course, CourseCategory, CoursePillar } from "@/lib/types/database";
 
 const pillars: CoursePillar[] = [
   "Digital Literacy",
@@ -15,6 +15,8 @@ const pillars: CoursePillar[] = [
   "Life Skills",
   "Cultural Identity",
 ];
+
+const categories: CourseCategory[] = ["Word", "Excel", "Slides", "Other"];
 
 export function CourseForm({
   course,
@@ -66,6 +68,18 @@ export function CourseForm({
         {pillars.map((p) => (
           <option key={p} value={p}>
             {p}
+          </option>
+        ))}
+      </select>
+      <select
+        name="category"
+        defaultValue={course?.category ?? "Other"}
+        disabled={isPending}
+        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+      >
+        {categories.map((c) => (
+          <option key={c} value={c}>
+            {c}
           </option>
         ))}
       </select>
