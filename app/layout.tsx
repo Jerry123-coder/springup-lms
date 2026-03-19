@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "Spring Up LMS",
   description:
     "Empowering the youth of the Senior Correctional Centre with digital literacy and ethical values.",
+  icons: {
+    icon: [{ url: "/icon.svg" }],
+  },
 };
 
 export default function RootLayout({

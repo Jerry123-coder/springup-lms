@@ -75,6 +75,17 @@ export interface Submission {
   created_at: string;
 }
 
+export interface Certificate {
+  id: string;
+  student_id: string;
+  course_id: string;
+  certificate_number: string;
+  file_url: string | null;
+  issued_by: string | null;
+  issued_at: string;
+  created_at: string;
+}
+
 // ─── Insert types (what INSERT expects) ─────────────────────
 
 export interface ProfileInsert {
@@ -111,6 +122,17 @@ export interface SubmissionInsert {
   status?: SubmissionStatus;
   grade?: number | null;
   feedback?: string;
+  created_at?: string;
+}
+
+export interface CertificateInsert {
+  id?: string;
+  student_id: string;
+  course_id: string;
+  certificate_number: string;
+  file_url?: string | null;
+  issued_by?: string | null;
+  issued_at?: string;
   created_at?: string;
 }
 
@@ -154,6 +176,17 @@ export interface SubmissionUpdate {
   created_at?: never;
 }
 
+export interface CertificateUpdate {
+  id?: never;
+  student_id?: string;
+  course_id?: string;
+  certificate_number?: string;
+  file_url?: string | null;
+  issued_by?: string | null;
+  issued_at?: string;
+  created_at?: never;
+}
+
 // ─── Supabase Database type for typed client ────────────────
 
 export interface Database {
@@ -193,6 +226,11 @@ export interface Database {
         Row: Submission;
         Insert: SubmissionInsert;
         Update: SubmissionUpdate;
+      };
+      certificates: {
+        Row: Certificate;
+        Insert: CertificateInsert;
+        Update: CertificateUpdate;
       };
     };
     Enums: {

@@ -22,7 +22,8 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const { data } = await (supabase.from("profiles") as any)
+  const { data } = await supabase
+    .from("profiles")
     .select("role, full_name, email")
     .eq("id", user.id)
     .single();

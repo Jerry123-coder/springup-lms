@@ -15,7 +15,8 @@ export async function gradeSubmission(formData: FormData) {
     return { error: "You must be logged in" };
   }
 
-  const { data } = await (supabase.from("profiles") as any)
+  const { data } = await supabase
+    .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
@@ -33,7 +34,8 @@ export async function gradeSubmission(formData: FormData) {
     return { error: "Valid submission ID and grade (0-100) are required" };
   }
 
-  const { error } = await (supabase.from("submissions") as any)
+  const { error } = await supabase
+    .from("submissions")
     .update({ grade, feedback, status: "reviewed" })
     .eq("id", submissionId);
 

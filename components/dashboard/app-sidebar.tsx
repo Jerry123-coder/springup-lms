@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   Settings,
   PlayCircle,
+  Award,
 } from "lucide-react";
 
 import {
@@ -73,6 +74,11 @@ const navByRole: Record<UserRole, NavItem[]> = {
       title: "My Submissions",
       href: "/dashboard/student/submissions",
       icon: ClipboardCheck,
+    },
+    {
+      title: "Certificates",
+      href: "/dashboard/student/certificates",
+      icon: Award,
     },
     tutorialsLink,
   ],

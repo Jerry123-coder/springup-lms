@@ -57,7 +57,7 @@ function StatsSkeleton() {
 async function StatsCards() {
   const supabase = await createClient();
 
-  const [students, courses, pending, reviewed] = await Promise.all([
+  const [students, courses, pending] = await Promise.all([
     supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
@@ -67,10 +67,6 @@ async function StatsCards() {
       .from("submissions")
       .select("*", { count: "exact", head: true })
       .eq("status", "pending"),
-    supabase
-      .from("submissions")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "reviewed"),
   ]);
 
   return (
@@ -83,8 +79,8 @@ async function StatsCards() {
         iconColor="text-sky-600"
       />
       <StatCard
-        title="Courses Completed"
-        value={String(reviewed.count ?? 0)}
+        title="Total Courses"
+        value={String(courses.count ?? 0)}
         icon={BookOpen}
         accent="bg-emerald-500/10"
         iconColor="text-emerald-600"

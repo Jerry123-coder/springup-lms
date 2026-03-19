@@ -11,9 +11,15 @@ import type { Lesson } from "@/lib/types/database";
 export function LessonSidebarList({
   lessons,
   courseId,
+  activePillClassName,
+  lessonHoverBgClassName,
+  lessonHoverTextClassName,
 }: {
   lessons: Lesson[];
   courseId: string;
+  activePillClassName?: string;
+  lessonHoverBgClassName?: string;
+  lessonHoverTextClassName?: string;
 }) {
   const params = useParams<{ lessonId?: string }>();
   const activeLessonId = params?.lessonId ?? null;
@@ -25,12 +31,17 @@ export function LessonSidebarList({
         return (
           <Button
             key={lesson.id}
-            variant={isActive ? "secondary" : "ghost"}
             className={cn(
               "w-full justify-start gap-2.5 text-left transition-all",
-              isActive && "bg-secondary font-medium shadow-sm",
-              !isActive && "hover:bg-muted/70"
+              "border-transparent",
+              isActive
+                ? cn("font-medium shadow-sm border", activePillClassName)
+                : "",
+              // Pill-themed hover so it doesn't use the UI's generic accent.
+              !isActive && lessonHoverBgClassName,
+              !isActive && lessonHoverTextClassName,
             )}
+            variant="ghost"
             asChild
           >
             <Link

@@ -14,10 +14,17 @@ INSERT INTO public.lessons (course_id, title, content, order_index) VALUES
 
 Welcome to your first lesson on Microsoft Word.
 
+@youtube:S-nHYzK-BVg
+
 ## What You Will Learn
 - How to open and create a new document
 - The Ribbon interface and key tabs
 - Basic typing, selecting, and deleting text
+
+## Quick Practice (10 minutes)
+- Create a file called **My Profile**.
+- Add a title, then write 5 lines about yourself.
+- Save it in your `SpringUp-Word` folder.
 
 ## Task
 > Open Microsoft Word and create a blank document. Type your full name and save the file as "my-first-document.docx".', 1),
@@ -26,26 +33,65 @@ Welcome to your first lesson on Microsoft Word.
 
 Learn how to make your documents look professional.
 
+## Outcome
+By the end of this lesson, you will be able to format a document with clear headings, readable spacing, and consistent styling.
+
 ## Key Skills
 - Bold, Italic, Underline
 - Font size and font family
 - Text alignment (left, centre, right, justify)
 - Headings and paragraph spacing
 
+## A simple rule for clean documents
+- Use **styles** (Headings) instead of manually changing font sizes everywhere.
+
+## Guided Practice (15 minutes)
+1. Create a heading: **"My Personal Statement"**
+2. Add 2 paragraphs (4–6 lines each)
+3. Apply:
+   - Heading 1 for the title
+   - 1.15 or 1.5 line spacing
+   - Justify alignment for body text
+4. Add a footer with your name (Insert → Footer)
+
 ## Task
-> Create a one-page document with a heading, two paragraphs, and at least three different formatting styles. Save and submit.', 2),
+> Create a one-page document with a heading, two paragraphs, and at least three different formatting styles.
+>
+> **Checklist**
+> - Heading uses a style (Heading 1)
+> - Body has readable spacing
+> - No more than 2 fonts
+>
+> Save and submit as `word-formatting.docx`.', 2),
 
   ('d1000000-0000-0000-0000-000000000001', 'Tables and Lists', '# Tables and Lists
 
 Organise information clearly using tables and lists.
+
+## Outcome
+You will be able to structure information using lists and tables that look clean and professional.
 
 ## What You Will Learn
 - Creating bulleted and numbered lists
 - Inserting and formatting tables
 - Merging cells and adjusting column widths
 
+## Guided Practice (15 minutes)
+Create a 2-column table:
+- Column 1: Skill
+- Column 2: How I will practice it
+Add at least 5 rows.
+
+## Design tips
+- Use a simple header row (bold + light background)
+- Keep spacing consistent (Table Design → Cell Margins if needed)
+
 ## Task
-> Create a document with a numbered list of 5 goals and a table showing your weekly schedule. Submit the file.', 3),
+> Create a document with:
+> 1. A numbered list of 5 goals
+> 2. A table showing your weekly schedule (Day / Study Time / Focus Topic)
+>
+> Save and submit as `word-tables.docx`.', 3),
 
   ('d1000000-0000-0000-0000-000000000002', 'Getting Started with Excel', '# Getting Started with Excel
 
@@ -85,6 +131,20 @@ Edit text quickly and cleanly using shortcuts.
 - Find/Replace
 - Line breaks vs paragraph breaks
 
+## Shortcuts to learn (pick 5)
+- Ctrl + C / X / V (copy/cut/paste)
+- Ctrl + Z / Y (undo/redo)
+- Ctrl + F (find)
+- Ctrl + H (replace)
+- Ctrl + A (select all)
+- Ctrl + B / I / U (bold/italic/underline)
+
+## Mini-challenge (10 minutes)
+Paste a paragraph and fix:
+- double spaces
+- repeated words
+- inconsistent capitalization
+
 ## Task (Submit)
 1. Type a 150–200 word paragraph about your goals.
 2. Use **Find/Replace** to fix repeated words or spacing.
@@ -96,6 +156,9 @@ Save as: `word-shortcuts.docx`', 4),
 ## Outcome
 Create a properly formatted letter (real-world skill).
 
+## When this helps
+- Requests, applications, formal communication, and workplace messages.
+
 ## Structure
 1. Sender details
 2. Date
@@ -106,6 +169,11 @@ Create a properly formatted letter (real-world skill).
 
 ## Task (Submit)
 Write a letter requesting an opportunity to learn/volunteer.
+Include:
+- A clear subject line
+- A respectful tone
+- A final paragraph asking for a response
+
 Save as: `word-letter.docx`', 5),
 
   -- EXCEL (continue)
@@ -328,9 +396,9 @@ INSERT INTO public.learning_paths (id, title, description) VALUES
   ('f5000000-0000-0000-0000-000000000001', 'Spring Up — Digital Foundations Path', 'A guided learning flow for the core digital tools: documents → spreadsheets → presentations.');
 
 INSERT INTO public.learning_blocks (id, path_id, title, subtitle, order_index) VALUES
-  ('f5000000-0000-0000-0000-000000000011', 'f5000000-0000-0000-0000-000000000001', 'Block 1 — Documents (Word)', 'Write, format, and structure professional documents.', 1),
-  ('f5000000-0000-0000-0000-000000000012', 'f5000000-0000-0000-0000-000000000001', 'Block 2 — Spreadsheets (Excel)', 'Organise data and calculate with confidence.', 2),
-  ('f5000000-0000-0000-0000-000000000013', 'f5000000-0000-0000-0000-000000000001', 'Block 3 — Presentations (Slides)', 'Communicate ideas clearly with clean slides.', 3);
+  ('f5000000-0000-0000-0000-000000000011', 'f5000000-0000-0000-0000-000000000001', 'Word Processing', 'Create clean documents: letters, CVs, and short reports.', 1),
+  ('f5000000-0000-0000-0000-000000000012', 'f5000000-0000-0000-0000-000000000001', 'Spreadsheet Fundamentals', 'Organise data, use formulas, and read charts with confidence.', 2),
+  ('f5000000-0000-0000-0000-000000000013', 'f5000000-0000-0000-0000-000000000001', 'Presentation Design', 'Design clear slides and present ideas with structure.', 3);
 
 INSERT INTO public.learning_block_courses (block_id, course_id, order_index) VALUES
   ('f5000000-0000-0000-0000-000000000011', 'd1000000-0000-0000-0000-000000000001', 1),
