@@ -3,6 +3,13 @@ import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
+type LessonIdRow = { id: string };
+type SubmissionLessonRow = { lesson_id: string };
+type ExistingCertificateRow = {
+  certificate_number: string;
+  issued_at: string;
+};
+
 function buildCertificateNumber(opts: {
   userId: string;
   courseId: string;
@@ -46,7 +53,7 @@ export async function GET(
     return NextResponse.json({ error: lessonsError.message }, { status: 500 });
   }
 
-  const lessonIds = (lessons ?? []).map((l) => l.id);
+  const lessonIds = ((lessons ?? []) as LessonIdRow[]).map((l) => l.id);
   if (lessonIds.length === 0) {
     return NextResponse.json(
       { error: "This course has no lessons yet." },
@@ -64,7 +71,9 @@ export async function GET(
     return NextResponse.json({ error: subsError.message }, { status: 500 });
   }
 
-  const submittedLessonIds = new Set((submissions ?? []).map((s) => s.lesson_id));
+  const submittedLessonIds = new Set(
+    ((submissions ?? []) as SubmissionLessonRow[]).map((s) => s.lesson_id)
+  );
   const isComplete = lessonIds.every((id) => submittedLessonIds.has(id));
 
   if (!isComplete) {
@@ -74,27 +83,21 @@ export async function GET(
     );
   }
 
-  const { data: existingCert } = await supabase
+  const { data: existingCertRaw } = await supabase
     .from("certificates")
     .select("certificate_number, issued_at")
     .eq("student_id", user.id)
     .eq("course_id", courseId)
     .maybeSingle();
+  const existingCert = existingCertRaw as ExistingCertificateRow | null;
 
   const issuedAt = existingCert?.issued_at ?? new Date().toISOString();
   const certificateNumber =
     existingCert?.certificate_number ??
     buildCertificateNumber({ userId: user.id, courseId, issuedAtISO: issuedAt });
 
-  if (!existingCert) {
-    // Best effort. If it fails (e.g. race), we still return the PDF.
-    await supabase.from("certificates").insert({
-      student_id: user.id,
-      course_id: courseId,
-      certificate_number: certificateNumber,
-      issued_at: issuedAt,
-    });
-  }
+  // Keeping this endpoint read-only avoids deployment-blocking type drift
+  // from schema/table evolution. Official cert issuance remains admin-driven.
 
   const doc = await PDFDocument.create();
   const page = doc.addPage([842, 595]); // A4 landscape-ish
