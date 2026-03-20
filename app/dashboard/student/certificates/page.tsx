@@ -7,7 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 type CourseRow = { id: string; title: string; pillar: string; category: string };
+type BlockCourseRow = { course_id: string };
 type LessonRow = { id: string; course_id: string };
+type SubmissionRow = { lesson_id: string };
+type CertificateRow = {
+  course_id: string;
+  certificate_number: string;
+  issued_at: string;
+  file_url: string | null;
+  issued_by: string | null;
+};
 
 function pct(done: number, total: number) {
   if (total <= 0) return 0;
@@ -32,7 +41,11 @@ export default async function StudentCertificatesPage() {
   for (const c of (courses ?? []) as CourseRow[]) courseById.set(c.id, c);
 
   const learningCourseIds = Array.from(
-    new Set((blockCourses ?? []).map((bc) => bc.course_id).filter(Boolean))
+    new Set(
+      ((blockCourses ?? []) as BlockCourseRow[])
+        .map((bc) => bc.course_id)
+        .filter(Boolean)
+    )
   ) as string[];
 
   const learningCourses = learningCourseIds
@@ -53,7 +66,9 @@ export default async function StudentCertificatesPage() {
     .eq("student_id", user.id)
     .in("lesson_id", lessonIds.length ? lessonIds : ["00000000-0000-0000-0000-000000000000"]);
 
-  const submittedLessonIds = new Set((submissions ?? []).map((s) => s.lesson_id));
+  const submittedLessonIds = new Set(
+    ((submissions ?? []) as SubmissionRow[]).map((s) => s.lesson_id)
+  );
 
   const lessonsByCourse = new Map<string, string[]>();
   for (const l of lessonRows) {
@@ -90,7 +105,7 @@ export default async function StudentCertificatesPage() {
     string,
     { certificate_number: string; issued_at: string; file_url: string | null }
   >();
-  for (const r of certRows ?? []) {
+  for (const r of (certRows ?? []) as CertificateRow[]) {
     certByCourseId.set(r.course_id, {
       certificate_number: r.certificate_number,
       issued_at: r.issued_at,

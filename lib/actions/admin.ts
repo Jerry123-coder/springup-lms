@@ -4,14 +4,36 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole, CourseCategory, CoursePillar, Profile } from "@/lib/types/database";
 
+type ActionDbError = { message: string };
+type EqResult = Promise<{ error: ActionDbError | null }>;
+type SingleResult = Promise<{ data: unknown; error: ActionDbError | null }>;
+type InsertResult = Promise<{ error: ActionDbError | null }>;
+
+type LooseTable = {
+  select: (columns: string) => {
+    eq: (column: string, value: string) => {
+      single: () => SingleResult;
+    };
+  };
+  update: (values: Record<string, unknown>) => {
+    eq: (column: string, value: string) => EqResult;
+  };
+  insert: (values: Record<string, unknown>) => InsertResult;
+  delete: () => {
+    eq: (column: string, value: string) => EqResult;
+  };
+};
+
 async function requireAdmin() {
   const supabase = await createClient();
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { supabase: null as never, error: "Not authenticated" };
 
-  const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  const { data } = await table("profiles").select("*").eq("id", user.id).single();
 
   const profile = data as Profile | null;
   if (profile?.role !== "admin")
@@ -25,6 +47,8 @@ async function requireAdmin() {
 export async function updateUserRole(formData: FormData) {
   const { supabase, error: authError } = await requireAdmin();
   if (authError) return { error: authError };
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
 
   const userId = formData.get("user_id") as string;
   const role = formData.get("role") as UserRole;
@@ -33,7 +57,7 @@ export async function updateUserRole(formData: FormData) {
     return { error: "Invalid user ID or role" };
   }
 
-  const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
+  const { error } = await table("profiles").update({ role }).eq("id", userId);
 
   if (error) return { error: error.message };
 
@@ -47,6 +71,8 @@ export async function updateUserRole(formData: FormData) {
 export async function createCourse(formData: FormData) {
   const { supabase, error: authError } = await requireAdmin();
   if (authError) return { error: authError };
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
 
   const title = formData.get("title") as string;
   const pillar = formData.get("pillar") as CoursePillar;
@@ -55,7 +81,7 @@ export async function createCourse(formData: FormData) {
 
   if (!title || !pillar) return { error: "Title and pillar are required" };
 
-  const { error } = await supabase.from("courses").insert({
+  const { error } = await table("courses").insert({
     title,
     pillar,
     category,
@@ -72,6 +98,8 @@ export async function createCourse(formData: FormData) {
 export async function updateCourse(formData: FormData) {
   const { supabase, error: authError } = await requireAdmin();
   if (authError) return { error: authError };
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
 
   const courseId = formData.get("course_id") as string;
   const title = formData.get("title") as string;
@@ -82,8 +110,7 @@ export async function updateCourse(formData: FormData) {
   if (!courseId || !title || !pillar)
     return { error: "Course ID, title, and pillar are required" };
 
-  const { error } = await supabase
-    .from("courses")
+  const { error } = await table("courses")
     .update({ title, pillar, category, description })
     .eq("id", courseId);
 
@@ -97,12 +124,13 @@ export async function updateCourse(formData: FormData) {
 export async function deleteCourse(formData: FormData) {
   const { supabase, error: authError } = await requireAdmin();
   if (authError) return { error: authError };
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
 
   const courseId = formData.get("course_id") as string;
   if (!courseId) return { error: "Course ID is required" };
 
-  const { error } = await supabase
-    .from("courses")
+  const { error } = await table("courses")
     .delete()
     .eq("id", courseId);
 
@@ -118,6 +146,8 @@ export async function deleteCourse(formData: FormData) {
 export async function createLesson(formData: FormData) {
   const { supabase, error: authError } = await requireAdmin();
   if (authError) return { error: authError };
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
 
   const courseId = formData.get("course_id") as string;
   const title = formData.get("title") as string;
@@ -127,7 +157,7 @@ export async function createLesson(formData: FormData) {
   if (!courseId || !title)
     return { error: "Course ID and title are required" };
 
-  const { error } = await supabase.from("lessons").insert({
+  const { error } = await table("lessons").insert({
     course_id: courseId,
     title,
     content,
@@ -144,6 +174,8 @@ export async function createLesson(formData: FormData) {
 export async function updateLesson(formData: FormData) {
   const { supabase, error: authError } = await requireAdmin();
   if (authError) return { error: authError };
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
 
   const lessonId = formData.get("lesson_id") as string;
   const title = formData.get("title") as string;
@@ -153,8 +185,7 @@ export async function updateLesson(formData: FormData) {
   if (!lessonId || !title)
     return { error: "Lesson ID and title are required" };
 
-  const { error } = await supabase
-    .from("lessons")
+  const { error } = await table("lessons")
     .update({ title, content, order_index: orderIndex })
     .eq("id", lessonId);
 
@@ -168,12 +199,13 @@ export async function updateLesson(formData: FormData) {
 export async function deleteLesson(formData: FormData) {
   const { supabase, error: authError } = await requireAdmin();
   if (authError) return { error: authError };
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
 
   const lessonId = formData.get("lesson_id") as string;
   if (!lessonId) return { error: "Lesson ID is required" };
 
-  const { error } = await supabase
-    .from("lessons")
+  const { error } = await table("lessons")
     .delete()
     .eq("id", lessonId);
 

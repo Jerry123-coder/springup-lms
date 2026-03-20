@@ -9,6 +9,8 @@ type ExistingCertificateRow = {
   certificate_number: string;
   issued_at: string;
 };
+type ProfileNameRow = { full_name: string };
+type CourseRow = { id: string; title: string; pillar: string };
 
 function buildCertificateNumber(opts: {
   userId: string;
@@ -35,10 +37,12 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [{ data: profile }, { data: course }] = await Promise.all([
+  const [{ data: profileRaw }, { data: courseRaw }] = await Promise.all([
     supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
     supabase.from("courses").select("id, title, pillar").eq("id", courseId).maybeSingle(),
   ]);
+  const profile = profileRaw as ProfileNameRow | null;
+  const course = courseRaw as CourseRow | null;
 
   if (!course) {
     return NextResponse.json({ error: "Course not found" }, { status: 404 });
@@ -213,12 +217,13 @@ export async function GET(
   });
 
   const pdfBytes = await doc.save();
+  const pdfBuffer = Buffer.from(pdfBytes);
   const safeCourseName = course.title
     .toLowerCase()
     .replaceAll(/[^a-z0-9]+/g, "-")
     .replaceAll(/^-|-$/g, "");
 
-  return new NextResponse(pdfBytes, {
+  return new NextResponse(pdfBuffer, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
