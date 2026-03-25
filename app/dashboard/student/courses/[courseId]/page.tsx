@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import {
   LessonSidebarSkeleton,
   LessonContentSkeleton,
@@ -38,10 +39,14 @@ export default async function CourseDetailPage({
   const { courseId } = await params;
 
   return (
-    <div className="h-svh overflow-hidden">
+    <div className="flex h-svh flex-col overflow-hidden">
+      <div className="shrink-0 md:hidden">
+        <DashboardHeader heading="Course" />
+      </div>
+
       <Suspense
         fallback={
-          <div className="flex h-full w-full flex-col gap-4 md:flex-row md:gap-0">
+          <div className="flex flex-1 flex-col gap-4 overflow-hidden md:flex-row md:gap-0">
             <aside className="w-full rounded-xl border bg-muted/30 p-4 md:w-72 md:border-b-0 md:p-3">
               <LessonSidebarSkeleton />
             </aside>

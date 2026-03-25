@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import {
   LessonContentSkeleton,
   LessonSidebarSkeleton,
@@ -14,10 +15,13 @@ export default async function LessonPage({ params }: PageProps) {
   const { courseId, lessonId } = await params;
 
   return (
-    <div className="h-svh overflow-hidden">
+    <div className="flex h-svh flex-col overflow-hidden">
+      <div className="shrink-0 md:hidden">
+        <DashboardHeader heading="Course" />
+      </div>
       <Suspense
         fallback={
-          <div className="flex h-full w-full flex-col gap-4 md:flex-row md:gap-0">
+          <div className="flex flex-1 flex-col gap-4 overflow-hidden md:flex-row md:gap-0">
             <aside className="w-full rounded-xl border bg-muted/30 p-4 md:w-72 md:border-b-0 md:p-3">
               <LessonSidebarSkeleton />
             </aside>

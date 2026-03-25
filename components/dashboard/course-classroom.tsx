@@ -1,11 +1,16 @@
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowRight,
   BookOpen,
+  CheckCircle2,
   Clock,
+  ClipboardCheck,
   ExternalLink,
   Keyboard,
   Layers,
+  Sparkles,
+  UploadCloud,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -224,6 +229,80 @@ export async function CourseClassroom({
   const totalCount = lessonIds.length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
+  const isCourseComplete = totalCount > 0 && completedCount === totalCount;
+  const nextLesson = lessonList.find((l) => !completedLessonIds.has(l.id)) ?? null;
+
+  let guideTitle: string | null = null;
+  let guideSubtitle: string | null = null;
+  let guideHref: string | null = null;
+
+  if (nextLesson) {
+    guideTitle = "Next up in your learning path";
+    guideSubtitle = nextLesson.title;
+    guideHref = `/dashboard/student/courses/${courseId}/lessons/${nextLesson.id}`;
+  } else if (isCourseComplete) {
+    // If the course is complete, auto-guide to the next course in the learning path.
+    const { data: blocks } = await supabase
+      .from("learning_blocks")
+      .select("id, order_index")
+      .order("order_index", { ascending: true });
+
+    const blockRows = (blocks ?? []) as { id: string; order_index: number }[];
+    const blockIds = blockRows.map((b) => b.id);
+
+    if (blockIds.length > 0) {
+      const { data: blockCourses } = await supabase
+        .from("learning_block_courses")
+        .select("block_id, course_id, order_index")
+        .in("block_id", blockIds);
+
+      const rows = (blockCourses ?? []) as {
+        block_id: string;
+        course_id: string;
+        order_index: number;
+      }[];
+
+      const coursesByBlock = new Map<string, { course_id: string; order_index: number }[]>();
+      for (const r of rows) {
+        const arr = coursesByBlock.get(r.block_id) ?? [];
+        arr.push({ course_id: r.course_id, order_index: r.order_index });
+        coursesByBlock.set(r.block_id, arr);
+      }
+
+      const orderedCourseIds: string[] = [];
+      for (const b of blockRows) {
+        const list = (coursesByBlock.get(b.id) ?? []).sort(
+          (a, b2) => a.order_index - b2.order_index
+        );
+        for (const x of list) orderedCourseIds.push(x.course_id);
+      }
+
+      const currentIndex = orderedCourseIds.findIndex((id) => id === typedCourse.id);
+      const nextCourseId = currentIndex >= 0 ? orderedCourseIds[currentIndex + 1] : null;
+
+      if (nextCourseId) {
+        const { data: nextCourseLessons } = await supabase
+          .from("lessons")
+          .select("id")
+          .eq("course_id", nextCourseId)
+          .order("order_index", { ascending: true })
+          .limit(1);
+
+        const firstLesson = (nextCourseLessons ?? []) as { id: string }[];
+        if (firstLesson[0]?.id) {
+          // We keep the subtitle simple (title requires an extra query).
+          guideTitle = "Course complete — next course starts now";
+          guideSubtitle = "Continue your learning path";
+          guideHref = `/dashboard/student/courses/${nextCourseId}/lessons/${firstLesson[0].id}`;
+        }
+      } else {
+        guideTitle = "You finished the learning path";
+        guideSubtitle = "Great work — check certificates anytime";
+        guideHref = "/dashboard/student/certificates";
+      }
+    }
+  }
+
   // Fetch existing submissions for the active lesson
   let existingSubmission: Submission | null = null;
   if (activeLesson) {
@@ -242,7 +321,7 @@ export async function CourseClassroom({
   }
 
   return (
-    <div className="flex h-full flex-col gap-2 overflow-hidden md:flex-row md:gap-0">
+    <div className="flex flex-1 flex-col gap-2 overflow-hidden md:flex-row md:gap-0">
       <CourseSidebarAutoCollapse />
       {/* Lesson sidebar */}
       <aside
@@ -312,7 +391,10 @@ export async function CourseClassroom({
           {/* Resources (pinned bottom) */}
           <div className="flex-none border-t p-3">
             <div className="rounded-lg border bg-card/30 p-3">
-              <p className="text-xs font-semibold">Resources</p>
+              <p className="flex items-center gap-2 text-xs font-semibold">
+                <BookOpen className={`h-3.5 w-3.5 ${theme.icon}`} />
+                Resources
+              </p>
               <div className="mt-2 space-y-2 text-xs">
                 <a
                   className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
@@ -466,7 +548,10 @@ export async function CourseClassroom({
 
                   <div className="flex-none border-t p-3">
                     <div className="rounded-lg border bg-card/30 p-3">
-                      <p className="text-xs font-semibold">Resources</p>
+                      <p className="flex items-center gap-2 text-xs font-semibold">
+                        <BookOpen className={`h-3.5 w-3.5 ${theme.icon}`} />
+                        Resources
+                      </p>
                       <div className="mt-2 space-y-2 text-xs">
                         <a
                           className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
@@ -536,7 +621,8 @@ export async function CourseClassroom({
                 {/* Progress bar at top */}
                 <div className="mt-3">
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span className="font-medium text-foreground/80">
+                    <span className="inline-flex items-center gap-2 font-medium text-foreground/80">
+                      <CheckCircle2 className={`h-3.5 w-3.5 ${theme.icon}`} />
                       Progress
                     </span>
                     <span>
@@ -554,6 +640,33 @@ export async function CourseClassroom({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+              {guideHref && guideTitle && (
+                <div
+                  className={`mb-5 rounded-xl border bg-card/60 p-4 shadow-sm ${theme.quote.bg}`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className={`h-4 w-4 ${theme.icon}`} />
+                        <p className="truncate text-sm font-semibold">{guideTitle}</p>
+                      </div>
+                      {guideSubtitle && (
+                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                          {guideSubtitle}
+                        </p>
+                      )}
+                    </div>
+
+                    <Button asChild size="sm" className="shrink-0">
+                      <Link href={guideHref}>
+                        Go next
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">
                 <div>
                   <div className="prose prose-slate dark:prose-invert max-w-none text-foreground [&_p]:leading-relaxed [&_h1]:mb-2 [&_h1]:mt-7 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mb-1 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:ml-5">
@@ -577,7 +690,10 @@ export async function CourseClassroom({
                   {existingSubmission && (
                     <div className="mb-6 rounded-lg border bg-muted/50 p-4 transition-colors hover:bg-muted/60">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">Previous Submission</p>
+                        <p className="flex items-center gap-2 text-sm font-medium">
+                          <ClipboardCheck className={`h-4 w-4 ${theme.icon}`} />
+                          Previous Submission
+                        </p>
                         <Badge
                           variant={
                             existingSubmission.status === "reviewed"
@@ -606,7 +722,8 @@ export async function CourseClassroom({
 
                   {/* Upload zone */}
                   <div className="rounded-lg border bg-muted/30 p-5 transition-colors hover:bg-muted/40">
-                    <h3 className="mb-3 text-sm font-semibold">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                      <UploadCloud className={`h-4 w-4 ${theme.icon}`} />
                       Submit Assignment
                     </h3>
                     <UploadForm lessonId={activeLesson.id} />
