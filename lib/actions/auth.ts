@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
 import type { UserRole } from "@/lib/types/database";
 
 export async function login(formData: FormData) {
@@ -59,11 +60,13 @@ export async function signup(formData: FormData) {
   const fullName = formData.get("full_name") as string;
   const next = formData.get("next") as string | null;
 
+  const siteUrl = getSiteUrl();
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { full_name: fullName },
+      emailRedirectTo: `${siteUrl}/auth/callback`,
     },
   });
 

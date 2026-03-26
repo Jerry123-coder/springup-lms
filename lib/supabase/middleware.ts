@@ -31,6 +31,14 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // PKCE email/OAuth: Supabase redirects here with ?code=... — exchange on dedicated route
+  const code = request.nextUrl.searchParams.get("code");
+  if (code && !pathname.startsWith("/auth/callback")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   // Protect all /dashboard routes — redirect unauthenticated users to login
   if (pathname.startsWith("/dashboard") && !user) {
     const url = request.nextUrl.clone();
