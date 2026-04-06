@@ -1,60 +1,161 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Heart } from "lucide-react";
+import { ArrowRight, Heart, Sparkles } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { SupportDrawer } from "@/components/marketing/support-drawer";
+import { SpringLogo } from "@/components/marketing/spring-logo";
+
+// Floating ring decoration
+function Ring({ size, delay, duration }: { size: number; delay: number; duration: number }) {
+  return (
+    <motion.div
+      className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border"
+      style={{ width: size, height: size, borderColor: "rgba(148,211,193,0.08)" }}
+      animate={{ scale: [1, 1.12, 1], opacity: [0.3, 0.08, 0.3] }}
+      transition={{ duration, repeat: Infinity, delay, ease: "easeInOut" }}
+    />
+  );
+}
 
 export function CTASection() {
+  const ref = useRef<HTMLElement>(null);
+
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const plantY = useTransform(scrollYProgress, [0, 1], [20, -20]);
+  const plantRotate = useTransform(scrollYProgress, [0, 1], [-3, 3]);
+
   return (
-    <section className="relative overflow-hidden bg-[#0f2847] py-20 md:py-28">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.08)_0%,transparent_60%)]" />
+    <section
+      ref={ref}
+      className="relative overflow-hidden py-24 md:py-36"
+      style={{ background: "linear-gradient(148deg, #000d0a 0%, #001a16 25%, #00342b 55%, #004a3c 80%, #0a5c52 100%)" }}
+    >
+      {/* Animated rings */}
+      {[240, 380, 520, 660, 800].map((sz, i) => (
+        <Ring key={sz} size={sz} delay={i * 0.4} duration={5 + i} />
+      ))}
 
-      <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6">
-        <div className="group mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-500/15 transition-all duration-300 hover:scale-110">
-          <Heart className="h-7 w-7 text-pink-400 transition-transform duration-500 group-hover:scale-110" />
-        </div>
+      {/* Warm centre glow */}
+      <motion.div
+        className="pointer-events-none absolute left-1/2 top-1/2 h-144 w-xl -translate-x-1/2 -translate-y-1/2 rounded-full opacity-20 blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(255,204,170,0.6) 0%, transparent 60%)" }}
+        animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.28, 0.15] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+      />
 
-        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+      {/* Dot grid */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.08]"
+        style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "22px 22px" }} />
+      <div className="pointer-events-none absolute inset-0 scholar-hero-grain" />
+
+      {/* Floating spring logo – top right decorative */}
+      <motion.div
+        className="pointer-events-none absolute -right-10 top-8 opacity-[0.15] lg:opacity-[0.1]"
+        style={{ y: plantY, rotate: plantRotate }}
+      >
+        <SpringLogo size={200} variant="mark" animated={false} />
+      </motion.div>
+
+      {/* Content */}
+      <div className="relative z-10 mx-auto max-w-3xl px-4 text-center sm:px-6">
+
+        {/* Animated heart/spark icon */}
+        <motion.div
+          className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-2xl"
+          style={{ background: "rgba(255,220,194,0.12)", border: "1px solid rgba(255,220,194,0.2)" }}
+          initial={{ scale: 0, rotate: -30 }}
+          whileInView={{ scale: 1, rotate: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ type: "spring", stiffness: 280, damping: 14, delay: 0.1 }}
+          whileHover={{ scale: 1.12, rotate: 8 }}
+        >
+          <motion.div
+            animate={{ scale: [1, 1.15, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Heart className="h-8 w-8 text-[#ffdcc2]" />
+          </motion.div>
+        </motion.div>
+
+        {/* Headline */}
+        <motion.h2
+          className="font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+        >
           Every Skill Learned Is a{" "}
-          <span className="bg-linear-to-r from-sky-400 to-emerald-400 bg-clip-text text-transparent">
+          <span className="inline-block text-[#5dd494]">
             Life Changed
           </span>
-        </h2>
+        </motion.h2>
 
-        <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-blue-200/60">
-          Your support provides laptops, internet access, learning materials,
-          and instructor training for young men who deserve a second chance.
-          Even a small contribution creates ripples of transformation.
-        </p>
+        <motion.p
+          className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-white/80"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.65, delay: 0.35 }}
+        >
+          Your support provides laptops, internet access, learning materials, and instructor
+          training for young men who deserve a second chance. Even a small contribution
+          creates ripples of transformation.
+        </motion.p>
 
-        <div className="mt-10 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-center">
+        {/* CTA buttons */}
+        <motion.div
+          className="mt-10 flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
           <SupportDrawer>
-            <Button
-              size="lg"
-              className="w-full gap-2 bg-sky-500 text-base font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:bg-sky-400 active:scale-[0.98] sm:w-auto"
-            >
-              <Heart className="h-4 w-4" />
-              Donate Now
-            </Button>
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+              <Button
+                size="lg"
+                className="w-full gap-2 bg-gradient-primary text-base font-semibold text-white shadow-lg hover:shadow-primary/30 sm:w-auto"
+              >
+                <Heart className="h-4 w-4" />
+                Donate Now
+              </Button>
+            </motion.div>
           </SupportDrawer>
 
-          <Button
-            size="lg"
-            variant="outline"
-            className="w-full gap-2 border-white/20 bg-white/5 text-base text-blue-100 transition-all duration-200 hover:scale-[1.02] hover:bg-white/10 hover:text-white active:scale-[0.98] sm:w-auto"
-            asChild
-          >
-            <Link href="/login">
-              Join as Volunteer
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full gap-2 border-white/25 bg-white/8 text-base text-white/90 backdrop-blur-sm hover:bg-white/14 hover:text-white sm:w-auto"
+              asChild
+            >
+              <Link href="/login">
+                Join as Volunteer
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </motion.div>
+        </motion.div>
 
-        <p className="mt-8 text-xs text-blue-300/40">
-          All donations go directly to programme operations at the Senior
-          Correctional Centre, Roman Ridge, Accra, Ghana.
-        </p>
+        {/* Sparkle row */}
+        <motion.div
+          className="mt-10 flex items-center justify-center gap-2 text-white/45"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          <p className="text-xs font-medium">
+            All donations go directly to programme operations at the Senior Correctional Centre, Roman Ridge, Accra.
+          </p>
+          <Sparkles className="h-3.5 w-3.5" />
+        </motion.div>
       </div>
     </section>
   );

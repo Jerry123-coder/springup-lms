@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { RoleSelector } from "@/components/dashboard/role-selector";
+import { StudentInstructorAssign } from "@/components/dashboard/student-instructor-assign";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Profile } from "@/lib/types/database";
 
@@ -22,6 +23,20 @@ async function UsersTable() {
 
   const users = (data ?? []) as Profile[];
 
+  const instructors = users.filter((u) => u.role === "instructor");
+
+  const { data: assignRows } = await supabase
+    .from("instructor_student_assignments")
+    .select("student_id, instructor_id");
+
+  const assignByStudent = new Map<string, string>();
+  for (const row of assignRows ?? []) {
+    const r = row as { student_id: string; instructor_id: string };
+    if (!assignByStudent.has(r.student_id)) {
+      assignByStudent.set(r.student_id, r.instructor_id);
+    }
+  }
+
   if (users.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
@@ -40,6 +55,9 @@ async function UsersTable() {
               Email
             </th>
             <th className="px-4 py-3 text-left font-medium">Role</th>
+            <th className="hidden px-4 py-3 text-left font-medium lg:table-cell">
+              Instructor
+            </th>
             <th className="hidden px-4 py-3 text-left font-medium md:table-cell">
               Joined
             </th>
@@ -56,6 +74,17 @@ async function UsersTable() {
               </td>
               <td className="px-4 py-3">
                 <RoleSelector userId={u.id} currentRole={u.role} />
+              </td>
+              <td className="hidden px-4 py-3 lg:table-cell">
+                {u.role === "student" ? (
+                  <StudentInstructorAssign
+                    studentId={u.id}
+                    instructors={instructors}
+                    currentInstructorId={assignByStudent.get(u.id) ?? null}
+                  />
+                ) : (
+                  <span className="text-xs text-muted-foreground">—</span>
+                )}
               </td>
               <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">
                 {new Date(u.created_at).toLocaleDateString("en-GB", {
@@ -86,6 +115,7 @@ function TableSkeleton() {
           <Skeleton className="h-4 w-32" />
           <Skeleton className="hidden h-4 w-40 sm:block" />
           <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="hidden h-8 w-40 rounded-md lg:block" />
         </div>
       ))}
     </div>
@@ -100,7 +130,9 @@ export default function AdminUsersPage() {
         <div>
           <h2 className="text-lg font-semibold">All Users</h2>
           <p className="text-sm text-muted-foreground">
-            Toggle any user&apos;s role using the dropdown selector.
+            Toggle any user&apos;s role using the dropdown. For students, choose an
+            instructor so their submissions appear in that instructor&apos;s grading
+            queue (when assignments are set).
           </p>
         </div>
         <Suspense fallback={<TableSkeleton />}>

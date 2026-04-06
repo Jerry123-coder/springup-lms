@@ -31,12 +31,55 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // PKCE email/OAuth: Supabase redirects here with ?code=... — exchange on dedicated route
+  const code = request.nextUrl.searchParams.get("code");
+  if (code && !pathname.startsWith("/auth/callback")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   // Protect all /dashboard routes — redirect unauthenticated users to login
   if (pathname.startsWith("/dashboard") && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
+  }
+
+  // Role-based dashboard areas (matches BLUEPRINT RBAC)
+  if (user && pathname.startsWith("/dashboard")) {
+    const sharedPaths = ["/dashboard/tutorials"];
+    const isSharedRoute = sharedPaths.some(
+      (p) => pathname === p || pathname.startsWith(`${p}/`)
+    );
+    if (!isSharedRoute) {
+      const { data: profileRow } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      const profile = profileRow as { role?: "admin" | "instructor" | "student" } | null;
+      const role = profile?.role ?? "student";
+
+      const home =
+        role === "admin"
+          ? "/dashboard/admin"
+          : role === "instructor"
+            ? "/dashboard/instructor"
+            : "/dashboard/student";
+
+      if (pathname.startsWith("/dashboard/admin") && role !== "admin") {
+        return NextResponse.redirect(new URL(home, request.url));
+      }
+      if (pathname.startsWith("/dashboard/instructor") && role !== "instructor") {
+        return NextResponse.redirect(new URL(home, request.url));
+      }
+      if (pathname.startsWith("/dashboard/student") && role !== "student") {
+        return NextResponse.redirect(new URL(home, request.url));
+      }
+    }
   }
 
   // Redirect authenticated users away from login page

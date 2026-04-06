@@ -6,10 +6,15 @@ import {
   GraduationCap,
   LayoutDashboard,
   Users,
+  Users2,
   BookOpen,
   ClipboardCheck,
   Settings,
   PlayCircle,
+  Award,
+  TrendingUp,
+  BarChart3,
+  UserCheck,
 } from "lucide-react";
 
 import {
@@ -44,35 +49,43 @@ const tutorialsLink: NavItem = {
 const navByRole: Record<UserRole, NavItem[]> = {
   admin: [
     { title: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
-    { title: "Users", href: "/dashboard/admin/users", icon: Users },
+    { title: "Students", href: "/dashboard/admin/students", icon: Users },
+    { title: "Instructors", href: "/dashboard/admin/instructors", icon: UserCheck },
+    { title: "Cohorts", href: "/dashboard/admin/cohorts", icon: Users2 },
     { title: "Courses", href: "/dashboard/admin/courses", icon: BookOpen },
+    { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
     tutorialsLink,
     { title: "Settings", href: "/dashboard/admin/settings", icon: Settings },
   ],
   instructor: [
-    {
-      title: "Overview",
-      href: "/dashboard/instructor",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "Reviews",
-      href: "/dashboard/instructor/reviews",
-      icon: ClipboardCheck,
-    },
-    {
-      title: "Courses",
-      href: "/dashboard/instructor/courses",
-      icon: BookOpen,
-    },
+    { title: "Overview", href: "/dashboard/instructor", icon: LayoutDashboard },
+    { title: "My Students", href: "/dashboard/instructor/students", icon: Users },
+    { title: "My Classes", href: "/dashboard/instructor/cohorts", icon: Users2 },
+    { title: "Grading", href: "/dashboard/instructor/grading", icon: ClipboardCheck },
+    { title: "Courses", href: "/dashboard/instructor/courses", icon: BookOpen },
     tutorialsLink,
   ],
   student: [
-    { title: "Classroom", href: "/dashboard/student", icon: BookOpen },
+    { title: "Home", href: "/dashboard/student", icon: LayoutDashboard },
     {
-      title: "My Submissions",
+      title: "Course catalog",
+      href: "/dashboard/student/catalog",
+      icon: BookOpen,
+    },
+    {
+      title: "Learning Path",
+      href: "/dashboard/student/progress",
+      icon: TrendingUp,
+    },
+    {
+      title: "Assignments",
       href: "/dashboard/student/submissions",
       icon: ClipboardCheck,
+    },
+    {
+      title: "Certificates",
+      href: "/dashboard/student/certificates",
+      icon: Award,
     },
     tutorialsLink,
   ],
@@ -81,6 +94,31 @@ const navByRole: Record<UserRole, NavItem[]> = {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   role: UserRole;
   userName: string;
+}
+
+function isNavItemActive(pathname: string, href: string): boolean {
+  if (href === "/dashboard/admin" || href === "/dashboard/instructor") {
+    return pathname === href;
+  }
+  if (href === "/dashboard/student") {
+    return pathname === "/dashboard/student";
+  }
+  if (href === "/dashboard/student/catalog") {
+    return (
+      pathname === "/dashboard/student/catalog" ||
+      pathname.startsWith("/dashboard/student/courses")
+    );
+  }
+  if (href === "/dashboard/tutorials") {
+    return pathname === href || pathname.startsWith("/dashboard/tutorials/");
+  }
+  if (href === "/dashboard/instructor/grading") {
+    return (
+      pathname === href ||
+      pathname.startsWith("/dashboard/instructor/reviews")
+    );
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function AppSidebar({ role, userName, ...props }: AppSidebarProps) {
@@ -94,7 +132,7 @@ export function AppSidebar({ role, userName, ...props }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-emerald-400">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-xl bg-gradient-primary">
                   <GraduationCap className="size-4 text-white" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -122,7 +160,7 @@ export function AppSidebar({ role, userName, ...props }: AppSidebarProps) {
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={isNavItemActive(pathname, item.href)}
                     tooltip={item.title}
                   >
                     <Link href={item.href}>

@@ -39,15 +39,18 @@ export default async function CourseDetailPage({
   const { courseId } = await params;
 
   return (
-    <>
-      <DashboardHeader heading="Course" />
+    <div className="flex h-svh flex-col overflow-hidden">
+      <div className="shrink-0 md:hidden">
+        <DashboardHeader heading="Course" />
+      </div>
+
       <Suspense
         fallback={
-          <div className="flex flex-1 flex-col md:flex-row">
-            <aside className="w-full border-b bg-muted/30 p-4 md:w-64 md:shrink-0 md:border-b-0 md:border-r">
+          <div className="flex flex-1 flex-col gap-4 overflow-hidden md:flex-row md:gap-0">
+            <aside className="w-full rounded-xl border bg-muted/30 p-4 md:w-72 md:border-b-0 md:p-3">
               <LessonSidebarSkeleton />
             </aside>
-            <div className="flex-1 p-6">
+            <div className="flex-1 overflow-y-auto p-6">
               <LessonContentSkeleton />
             </div>
           </div>
@@ -55,6 +58,6 @@ export default async function CourseDetailPage({
       >
         <RedirectToFirstLesson courseId={courseId} />
       </Suspense>
-    </>
+    </div>
   );
 }

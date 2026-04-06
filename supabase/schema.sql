@@ -11,6 +11,7 @@
 DROP TABLE IF EXISTS public.submissions CASCADE;
 DROP TABLE IF EXISTS public.lessons     CASCADE;
 DROP TABLE IF EXISTS public.courses     CASCADE;
+DROP TABLE IF EXISTS public.certificates CASCADE;
 DROP TABLE IF EXISTS public.learning_block_courses CASCADE;
 DROP TABLE IF EXISTS public.learning_blocks        CASCADE;
 DROP TABLE IF EXISTS public.learning_paths         CASCADE;
@@ -125,6 +126,19 @@ CREATE TABLE public.submissions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- certificates — downloadable completion certificates per course
+CREATE TABLE public.certificates (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id         UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  course_id          UUID NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
+  certificate_number TEXT NOT NULL,
+  file_url           TEXT,
+  issued_by          UUID REFERENCES public.profiles(id),
+  issued_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (student_id, course_id)
+);
+
 -- Index for fast instructor queries on pending submissions
 CREATE INDEX idx_submissions_status
   ON public.submissions(status);
@@ -178,6 +192,7 @@ ALTER TABLE public.profiles    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courses     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.lessons     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.certificates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.learning_paths ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.learning_blocks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.learning_block_courses ENABLE ROW LEVEL SECURITY;
@@ -348,3 +363,21 @@ CREATE POLICY "Instructors can update submissions"
 CREATE POLICY "Admins can update submissions"
   ON public.submissions FOR UPDATE
   USING (public.get_user_role() = 'admin');
+
+
+-- ── CERTIFICATES policies ───────────────────────────────────
+
+-- Students can view only their own certificates
+CREATE POLICY "Students can view own certificates"
+  ON public.certificates FOR SELECT
+  USING (student_id = auth.uid());
+
+-- Admins can view all certificates
+CREATE POLICY "Admins can view all certificates"
+  ON public.certificates FOR SELECT
+  USING (public.get_user_role() = 'admin');
+
+-- Students can insert their own certificate records (issued by server route)
+CREATE POLICY "Students can insert own certificates"
+  ON public.certificates FOR INSERT
+  WITH CHECK (student_id = auth.uid());

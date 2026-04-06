@@ -31,9 +31,9 @@ function DetailRow({
   icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-3">
+    <div className="flex items-center justify-between rounded-lg bg-card px-4 py-3 shadow-ambient">
       <div className="flex items-center gap-3">
-        <Icon className="h-4 w-4 text-sky-600" />
+        <Icon className="h-4 w-4 text-primary" />
         <div>
           <p className="text-xs text-muted-foreground">{label}</p>
           <p className="font-mono text-sm font-medium">{value}</p>
@@ -42,7 +42,7 @@ function DetailRow({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-sky-600"
+        className="h-8 w-8 text-muted-foreground hover:text-primary"
         onClick={() => copyToClipboard(value, label)}
       >
         <Copy className="h-3.5 w-3.5" />
@@ -60,7 +60,7 @@ export function SupportDrawer({ children }: { children: React.ReactNode }) {
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
             <DrawerTitle className="flex items-center justify-center gap-2">
-              <Heart className="h-5 w-5 text-pink-500" />
+              <Heart className="h-5 w-5 text-[#ffdcc2]" />
               Support Spring Up
             </DrawerTitle>
             <DrawerDescription>
@@ -70,8 +70,8 @@ export function SupportDrawer({ children }: { children: React.ReactNode }) {
           </DrawerHeader>
 
           <div className="space-y-3 px-4">
-            <div className="rounded-lg border border-sky-100 bg-card p-4">
-              <p className="mb-3 text-center text-sm font-semibold text-sky-700">
+            <div className="rounded-lg bg-secondary/60 p-4">
+              <p className="mb-3 text-center text-sm font-semibold text-primary">
                 Bank Transfer
               </p>
               <div className="space-y-2">
@@ -93,8 +93,8 @@ export function SupportDrawer({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            <div className="rounded-lg border border-pink-100 bg-card p-4 dark:border-pink-900/30">
-              <p className="mb-3 text-center text-sm font-semibold text-pink-700 dark:text-pink-400">
+            <div className="rounded-lg bg-accent/30 p-4">
+              <p className="mb-3 text-center text-sm font-semibold text-accent-foreground">
                 Cash / Mobile Money
               </p>
               <DetailRow

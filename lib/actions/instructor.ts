@@ -4,8 +4,18 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/types/database";
 
+type ActionDbError = { message: string };
+
 export async function gradeSubmission(formData: FormData) {
   const supabase = await createClient();
+  const submissionsTable = supabase.from("submissions" as never) as unknown as {
+    update: (values: Record<string, unknown>) => {
+      eq: (
+        column: string,
+        value: string
+      ) => Promise<{ error: ActionDbError | null }>;
+    };
+  };
 
   const {
     data: { user },
@@ -15,7 +25,8 @@ export async function gradeSubmission(formData: FormData) {
     return { error: "You must be logged in" };
   }
 
-  const { data } = await (supabase.from("profiles") as any)
+  const { data } = await supabase
+    .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
@@ -33,7 +44,7 @@ export async function gradeSubmission(formData: FormData) {
     return { error: "Valid submission ID and grade (0-100) are required" };
   }
 
-  const { error } = await (supabase.from("submissions") as any)
+  const { error } = await submissionsTable
     .update({ grade, feedback, status: "reviewed" })
     .eq("id", submissionId);
 

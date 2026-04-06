@@ -1,0 +1,33 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Spring Up</title>
+  <desc id="desc">Spring Up LMS icon</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="64" x2="64" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f172a" />
+      <stop offset="1" stop-color="#0369a1" />
+    </linearGradient>
+    <linearGradient id="cap" x1="16" y1="20" x2="48" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#38bdf8" />
+      <stop offset="1" stop-color="#22c55e" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#bg)" />
+  <!-- mortarboard base -->
+  <path d="M16 26L32 18l16 8-16 8-16-8Z" fill="url(#cap)" />
+  <!-- tassel -->
+  <path
+    d="M32 26v10c0 2.5 1.5 4.5 3.5 5.5"
+    stroke="#f97316"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+  <!-- S letter -->
+  <path
+    d="M24 42c1.5 2.5 3.8 4 6.5 4 3.3 0 5.5-1.7 5.5-4 0-2.5-2.2-3.3-5.1-4.1-2.6-.7-4.9-1.5-4.9-3.9 0-2.1 1.9-3.6 4.8-3.6 2.2 0 3.9.7 5.2 2"
+    fill="none"
+    stroke="#e5f3ff"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+</svg>
+
