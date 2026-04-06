@@ -19,6 +19,7 @@ export interface Profile {
   email: string;
   full_name: string;
   role: UserRole;
+  can_edit_courses: boolean;
   created_at: string;
 }
 
@@ -75,6 +76,36 @@ export interface Submission {
   created_at: string;
 }
 
+/** Per-lesson progress (e.g. video watched) */
+export interface LessonProgress {
+  student_id: string;
+  lesson_id: string;
+  video_watched_at: string | null;
+  updated_at: string;
+}
+
+/** Admin links an instructor to a student for reviews / grading scope */
+export interface InstructorStudentAssignment {
+  id: string;
+  instructor_id: string;
+  student_id: string;
+  created_at: string;
+}
+
+export interface Cohort {
+  id: string;
+  instructor_id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
+export interface CohortStudent {
+  cohort_id: string;
+  student_id: string;
+  joined_at: string;
+}
+
 export interface Certificate {
   id: string;
   student_id: string;
@@ -125,6 +156,20 @@ export interface SubmissionInsert {
   created_at?: string;
 }
 
+export interface LessonProgressInsert {
+  student_id: string;
+  lesson_id: string;
+  video_watched_at?: string | null;
+  updated_at?: string;
+}
+
+export interface InstructorStudentAssignmentInsert {
+  id?: string;
+  instructor_id: string;
+  student_id: string;
+  created_at?: string;
+}
+
 export interface CertificateInsert {
   id?: string;
   student_id: string;
@@ -144,6 +189,7 @@ export interface ProfileUpdate {
   email?: string;
   full_name?: string;
   role?: UserRole;
+  can_edit_courses?: boolean;
   created_at?: never;
 }
 
@@ -226,6 +272,32 @@ export interface Database {
         Row: Submission;
         Insert: SubmissionInsert;
         Update: SubmissionUpdate;
+      };
+      lesson_progress: {
+        Row: LessonProgress;
+        Insert: LessonProgressInsert;
+        Update: Partial<Omit<LessonProgress, "student_id" | "lesson_id">> & {
+          student_id?: never;
+          lesson_id?: never;
+        };
+      };
+      instructor_student_assignments: {
+        Row: InstructorStudentAssignment;
+        Insert: InstructorStudentAssignmentInsert;
+        Update: Partial<Omit<InstructorStudentAssignment, "id" | "created_at">> & {
+          id?: never;
+          created_at?: never;
+        };
+      };
+      cohorts: {
+        Row: Cohort;
+        Insert: Omit<Cohort, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<Omit<Cohort, "id" | "created_at">> & { id?: never; created_at?: never };
+      };
+      cohort_students: {
+        Row: CohortStudent;
+        Insert: Omit<CohortStudent, "joined_at"> & { joined_at?: string };
+        Update: never;
       };
       certificates: {
         Row: Certificate;

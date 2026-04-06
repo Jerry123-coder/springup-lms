@@ -117,29 +117,37 @@ export default async function StudentCertificatesPage() {
 
   return (
     <>
-      <DashboardHeader heading="Certificates & Progress" />
-      <div className="flex-1 space-y-6 p-6">
-        <div className="rounded-xl border bg-card p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <DashboardHeader heading="Certificates" />
+      <div className="mx-auto w-full max-w-6xl flex-1 space-y-8 p-6">
+        <div className="rounded-[1.75rem] bg-muted/50 p-6 shadow-ambient sm:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-sky-500" />
-                <h2 className="text-lg font-semibold">Your overall learning progress</h2>
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card text-primary shadow-sm">
+                  <GraduationCap className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="font-display text-lg font-semibold md:text-xl">
+                    Learning path progress
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Lessons completed across your recommended programme.
+                  </p>
+                </div>
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Based on lessons you’ve completed in the recommended learning path.
-              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-sm font-semibold">{totalPercent}%</p>
+            <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-6">
+              <div className="text-center sm:text-right">
+                <p className="font-display text-2xl font-semibold tabular-nums">
+                  {totalPercent}%
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {totalDone}/{totalLessons} lessons
                 </p>
               </div>
-              <div className="h-2 w-44 overflow-hidden rounded-full bg-muted">
+              <div className="h-2 w-full max-w-[240px] overflow-hidden rounded-full bg-muted sm:w-44">
                 <div
-                  className="h-full rounded-full bg-linear-to-r from-sky-400 to-emerald-400"
+                  className="h-full rounded-full bg-gradient-primary"
                   style={{ width: `${totalPercent}%` }}
                 />
               </div>
@@ -147,27 +155,25 @@ export default async function StudentCertificatesPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border bg-card">
-          <div className="border-b px-5 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-semibold">Course certificates</h3>
-                <p className="text-sm text-muted-foreground">
-                  Certificates appear when you complete every lesson in a course.
-                </p>
-              </div>
-              <Badge variant={completed.length > 0 ? "default" : "secondary"}>
-                {completed.length} completed
-              </Badge>
+        <div className="rounded-[1.75rem] bg-muted/40 p-6 shadow-ambient sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="font-display text-lg font-semibold">Certificates</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Issued when you finish every lesson in a path course.
+              </p>
             </div>
+            <Badge variant={completed.length > 0 ? "default" : "secondary"}>
+              {completed.length} completed
+            </Badge>
           </div>
 
           {learningCourses.length === 0 ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">
+            <div className="mt-8 rounded-2xl bg-card/90 py-12 text-center text-sm text-muted-foreground shadow-ambient">
               No learning path found yet.
             </div>
           ) : (
-            <div className="divide-y">
+            <ul className="mt-8 space-y-5">
               {courseProgress.map((p) => {
                 const cert = certByCourseId.get(p.course.id);
                 const issued =
@@ -180,53 +186,66 @@ export default async function StudentCertificatesPage() {
                     : null;
 
                 return (
-                  <div key={p.course.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{p.course.title}</p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span className="rounded-md border px-2 py-0.5">{p.course.pillar}</span>
-                        <span className="rounded-md border px-2 py-0.5">{p.course.category}</span>
+                  <li
+                    key={p.course.id}
+                    className="rounded-2xl bg-card p-5 shadow-ambient sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-display font-medium leading-snug">{p.course.title}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span className="rounded-full bg-accent px-2.5 py-0.5 font-medium text-accent-foreground">
+                          {p.course.pillar}
+                        </span>
+                        <span className="rounded-full bg-muted px-2.5 py-0.5 font-medium">
+                          {p.course.category}
+                        </span>
                         <span>
-                          Progress: <span className="font-semibold text-foreground">{p.done}/{p.total}</span> ({p.percent}%)
+                          {p.done}/{p.total} lessons ({p.percent}%)
                         </span>
                       </div>
                       {p.isComplete && !cert?.file_url && (
-                        <p className="mt-2 text-xs text-amber-600 dark:text-amber-300">
-                          You’ve finished this course. Your official certificate will appear here once your coach issues it.
+                        <p className="mt-3 text-xs text-amber-700 dark:text-amber-300">
+                          Course complete—your certificate will appear when your coach
+                          issues it.
                         </p>
                       )}
                       {cert?.file_url && cert.certificate_number ? (
                         <p className="mt-2 text-xs text-muted-foreground">
-                          Certificate #{cert.certificate_number}{issued ? ` • Issued ${issued}` : ""}
+                          #{cert.certificate_number}
+                          {issued ? ` · ${issued}` : ""}
                         </p>
                       ) : null}
                     </div>
 
-                    <div className="flex items-center gap-2 sm:justify-end">
+                    <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-0 sm:justify-end">
                       {p.isComplete ? (
                         <Badge className="gap-1" variant="default">
-                          <Award className="h-3.5 w-3.5" /> Completed
+                          <Award className="h-3.5 w-3.5" /> Done
                         </Badge>
                       ) : (
                         <Badge variant="secondary">In progress</Badge>
                       )}
 
                       {cert?.file_url ? (
-                        <Button asChild>
+                        <Button asChild className="rounded-xl">
                           <Link href={cert.file_url} target="_blank" rel="noreferrer">
-                            Download official certificate
+                            Download
                           </Link>
                         </Button>
                       ) : p.isComplete ? (
-                        <Button disabled>Awaiting official certificate</Button>
+                        <Button disabled variant="secondary" className="rounded-xl">
+                          Awaiting issue
+                        </Button>
                       ) : (
-                        <Button disabled>Complete course to unlock</Button>
+                        <Button disabled variant="secondary" className="rounded-xl">
+                          Locked
+                        </Button>
                       )}
                     </div>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
         </div>
       </div>

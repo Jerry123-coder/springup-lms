@@ -4,29 +4,37 @@ import {
   ArrowRight,
   BookOpen,
   CheckCircle2,
+  ChevronRight,
+  Circle,
   Clock,
   ClipboardCheck,
+  Download,
   ExternalLink,
-  Keyboard,
+  FileText,
   Layers,
+  MessageSquare,
+  PlayCircle,
   Sparkles,
   UploadCloud,
 } from "lucide-react";
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
+import { parseLessonContent } from "@/lib/lesson-content";
 import { LessonSidebarList } from "@/components/dashboard/lesson-sidebar-list";
 import { LessonNavigation } from "@/components/dashboard/lesson-navigation";
 import { UploadForm } from "@/components/dashboard/upload-form";
+import { MarkCompleteBtn } from "@/components/dashboard/mark-complete-btn";
 import { CourseSidebarAutoCollapse } from "@/components/dashboard/course-sidebar-autocollapse";
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import type {
   Course,
   CoursePillar,
@@ -34,6 +42,7 @@ import type {
   Submission,
 } from "@/lib/types/database";
 
+// ── Pillar theming ────────────────────────────────────────────────
 const pillarTheme: Record<
   CoursePillar,
   {
@@ -41,130 +50,136 @@ const pillarTheme: Record<
     pill: string;
     icon: string;
     quote: { border: string; bg: string };
-    lessonHoverBg: string;
-    lessonHoverText: string;
   }
 > = {
   "Digital Literacy": {
     bar: "from-sky-500/70 via-sky-400/20 to-transparent",
-    pill:
-      "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-900/40 dark:bg-sky-950/40 dark:text-sky-300",
-    icon: "text-sky-700 dark:text-sky-300",
-    quote: {
-      border: "border-sky-500/60 dark:border-sky-400/60",
-      bg: "bg-sky-50/60 dark:bg-sky-950/30",
-    },
-    lessonHoverBg: "hover:bg-sky-100 dark:hover:bg-sky-400/15",
-    lessonHoverText: "hover:text-sky-900 dark:hover:text-sky-200",
+    pill: "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-900/40 dark:bg-sky-950/40 dark:text-sky-300",
+    icon: "text-sky-600 dark:text-sky-400",
+    quote: { border: "border-sky-500/40", bg: "bg-sky-50/60 dark:bg-sky-950/20" },
   },
   "Career Readiness": {
     bar: "from-amber-500/70 via-orange-400/20 to-transparent",
-    pill:
-      "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300",
-    icon: "text-amber-900 dark:text-amber-300",
-    quote: {
-      border: "border-amber-500/60 dark:border-amber-400/60",
-      bg: "bg-amber-50/60 dark:bg-amber-950/30",
-    },
-    lessonHoverBg: "hover:bg-amber-100 dark:hover:bg-amber-400/15",
-    lessonHoverText: "hover:text-amber-950 dark:hover:text-amber-200",
+    pill: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300",
+    icon: "text-amber-700 dark:text-amber-400",
+    quote: { border: "border-amber-500/40", bg: "bg-amber-50/60 dark:bg-amber-950/20" },
   },
   "Life Skills": {
     bar: "from-emerald-500/70 via-emerald-400/20 to-transparent",
-    pill:
-      "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300",
-    icon: "text-emerald-900 dark:text-emerald-300",
-    quote: {
-      border: "border-emerald-500/60 dark:border-emerald-400/60",
-      bg: "bg-emerald-50/60 dark:bg-emerald-950/30",
-    },
-    lessonHoverBg: "hover:bg-emerald-100 dark:hover:bg-emerald-400/15",
-    lessonHoverText: "hover:text-emerald-950 dark:hover:text-emerald-200",
+    pill: "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300",
+    icon: "text-emerald-700 dark:text-emerald-400",
+    quote: { border: "border-emerald-500/40", bg: "bg-emerald-50/60 dark:bg-emerald-950/20" },
   },
   "Cultural Identity": {
     bar: "from-violet-500/70 via-violet-400/20 to-transparent",
-    pill:
-      "border-violet-200 bg-violet-50 text-violet-900 dark:border-violet-900/40 dark:bg-violet-950/40 dark:text-violet-300",
-    icon: "text-violet-900 dark:text-violet-300",
-    quote: {
-      border: "border-violet-500/60 dark:border-violet-400/60",
-      bg: "bg-violet-50/60 dark:bg-violet-950/30",
-    },
-    lessonHoverBg: "hover:bg-violet-100 dark:hover:bg-violet-400/15",
-    lessonHoverText: "hover:text-violet-950 dark:hover:text-violet-200",
+    pill: "border-violet-200 bg-violet-50 text-violet-900 dark:border-violet-900/40 dark:bg-violet-950/40 dark:text-violet-300",
+    icon: "text-violet-700 dark:text-violet-400",
+    quote: { border: "border-violet-500/40", bg: "bg-violet-50/60 dark:bg-violet-950/20" },
   },
 };
 
+// ── Static course video map ───────────────────────────────────────
 const courseVideoById: Record<string, string> = {
-  // Microsoft Word Proficiency
   "d1000000-0000-0000-0000-000000000001": "S-nHYzK-BVg",
-  // Slides Foundations (PowerPoint / Google Slides)
+  "d1000000-0000-0000-0000-000000000002": "G93P4DxryVE",
   "d1000000-0000-0000-0000-000000000003": "ChEan-3U7B4",
 };
 
+// ── Static lesson materials per pillar ───────────────────────────
+const PILLAR_MATERIALS: Record<
+  string,
+  { name: string; type: string; url: string }[]
+> = {
+  "Digital Literacy": [
+    {
+      name: "Microsoft Word Support",
+      type: "WEB",
+      url: "https://support.microsoft.com/word",
+    },
+    {
+      name: "Keyboard Shortcuts Guide",
+      type: "WEB",
+      url: "https://support.microsoft.com/office/keyboard-shortcuts-in-microsoft-word-95ef89dd-7142-4b50-afb2-f762f663ceb2",
+    },
+    {
+      name: "Excel Function Reference",
+      type: "WEB",
+      url: "https://support.microsoft.com/excel",
+    },
+  ],
+  "Career Readiness": [
+    {
+      name: "Professional Writing Guide",
+      type: "WEB",
+      url: "https://www.grammarly.com/blog/professional-email/",
+    },
+    {
+      name: "LinkedIn Profile Tips",
+      type: "WEB",
+      url: "https://www.linkedin.com/help/linkedin/answer/a554351",
+    },
+  ],
+  "Life Skills": [
+    {
+      name: "Financial Literacy Toolkit",
+      type: "WEB",
+      url: "https://www.consumer.gov/",
+    },
+    {
+      name: "Time Management Templates",
+      type: "WEB",
+      url: "https://www.notion.so/templates",
+    },
+  ],
+  "Cultural Identity": [
+    {
+      name: "Research Writing Guide",
+      type: "WEB",
+      url: "https://owl.purdue.edu/owl/research_and_citation/",
+    },
+  ],
+};
+
+// ── Content renderer ─────────────────────────────────────────────
 function renderLessonLine(
   line: string,
   i: number,
-  theme: (typeof pillarTheme)[CoursePillar]
+  quoteStyle: { border: string; bg: string }
 ) {
-  if (line.startsWith("@youtube:")) {
-    const id = line.slice("@youtube:".length).trim();
-    if (!id) return null;
+  if (line.startsWith("@youtube:")) return null;
+  if (line.startsWith("### "))
     return (
-      <div
-        key={`yt-${i}`}
-        className="my-5 overflow-hidden rounded-xl border bg-muted/20"
-      >
-        <div className="aspect-video w-full bg-black/5">
-          <iframe
-            className="h-full w-full"
-            src={`https://www.youtube.com/embed/${id}?rel=0`}
-            title="Video tutorial"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-      </div>
-    );
-  }
-  if (line.startsWith("### ")) {
-    return (
-      <h3 key={i} className="mt-4 mb-1 text-base font-semibold">
+      <h3 key={i} className="mb-1 mt-4 text-base font-semibold">
         {line.slice(4)}
       </h3>
     );
-  }
-  if (line.startsWith("# ")) {
+  if (line.startsWith("## "))
     return (
-      <h1 key={i} className="first:mt-0 mt-6 mb-2 text-xl font-bold">
-        {line.slice(2)}
-      </h1>
-    );
-  }
-  if (line.startsWith("## ")) {
-    return (
-      <h2 key={i} className="mt-4 mb-1 text-lg font-semibold">
+      <h2 key={i} className="mb-1 mt-4 text-lg font-semibold">
         {line.slice(3)}
       </h2>
     );
-  }
-  if (line.startsWith("- ")) {
+  if (line.startsWith("# "))
+    return (
+      <h1 key={i} className="mb-2 mt-6 text-xl font-bold first:mt-0">
+        {line.slice(2)}
+      </h1>
+    );
+  if (line.startsWith("- "))
     return (
       <li key={i} className="ml-4 list-disc">
         {line.slice(2)}
       </li>
     );
-  }
-  if (line.startsWith("> ")) {
+  if (line.startsWith("> "))
     return (
       <blockquote
         key={i}
-        className={`my-3 rounded-md border-l-2 ${theme.quote.border} ${theme.quote.bg} px-4 py-3 italic text-muted-foreground`}
+        className={`my-3 rounded-md border-l-2 ${quoteStyle.border} ${quoteStyle.bg} px-4 py-3 italic text-muted-foreground`}
       >
         {line.slice(2)}
       </blockquote>
     );
-  }
   if (line.trim() === "") return <br key={i} />;
   return (
     <p key={i} className="leading-relaxed">
@@ -173,6 +188,7 @@ function renderLessonLine(
   );
 }
 
+// ── Main component ────────────────────────────────────────────────
 export async function CourseClassroom({
   courseId,
   lessonId,
@@ -204,34 +220,67 @@ export async function CourseClassroom({
   const activeLesson = lessonId
     ? lessonList.find((l) => l.id === lessonId)
     : lessonList[0];
-  const previewCount = Math.min(3, lessonList.length);
-  const activeLessonNumber = activeLesson
-    ? Math.max(lessonList.findIndex((l) => l.id === activeLesson.id), 0) + 1
-    : 1;
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Course progress: number of lessons with at least one submission
+  // Progress tracking
   const lessonIds = lessonList.map((l) => l.id);
   const completedLessonIds = new Set<string>();
+  const videoWatchedAtByLesson: Record<string, string | null> = {};
+
   if (user && lessonIds.length > 0) {
-    const { data: subs } = await supabase
-      .from("submissions")
-      .select("lesson_id")
-      .eq("student_id", user.id)
-      .in("lesson_id", lessonIds);
-    (subs ?? []).forEach((s) => completedLessonIds.add((s as { lesson_id: string }).lesson_id));
+    const [subsRes, lpRes] = await Promise.all([
+      supabase
+        .from("submissions")
+        .select("lesson_id")
+        .eq("student_id", user.id)
+        .in("lesson_id", lessonIds),
+      supabase
+        .from("lesson_progress")
+        .select("lesson_id, video_watched_at")
+        .eq("student_id", user.id)
+        .in("lesson_id", lessonIds),
+    ]);
+    (subsRes.data ?? []).forEach((s) =>
+      completedLessonIds.add((s as { lesson_id: string }).lesson_id)
+    );
+    (lpRes.data ?? []).forEach((r) => {
+      const row = r as { lesson_id: string; video_watched_at: string | null };
+      videoWatchedAtByLesson[row.lesson_id] = row.video_watched_at;
+    });
   }
 
   const completedCount = completedLessonIds.size;
   const totalCount = lessonIds.length;
-  const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-
+  const progressPct =
+    totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const isCourseComplete = totalCount > 0 && completedCount === totalCount;
-  const nextLesson = lessonList.find((l) => !completedLessonIds.has(l.id)) ?? null;
 
+  // Build lesson status record
+  const lessonStatusRecord: Record<
+    string,
+    { videoDone: boolean; hasSubmission: boolean }
+  > = {};
+  for (const l of lessonList) {
+    lessonStatusRecord[l.id] = {
+      videoDone: !!videoWatchedAtByLesson[l.id],
+      hasSubmission: completedLessonIds.has(l.id),
+    };
+  }
+
+  // Next un-submitted lesson
+  const nextLesson = lessonList.find((l) => !completedLessonIds.has(l.id)) ?? null;
+  const currentIdx = activeLesson
+    ? lessonList.findIndex((l) => l.id === activeLesson.id)
+    : -1;
+  const nextAdjacentLesson =
+    currentIdx >= 0 && currentIdx < lessonList.length - 1
+      ? lessonList[currentIdx + 1]
+      : null;
+
+  // Learning path guide card
   let guideTitle: string | null = null;
   let guideSubtitle: string | null = null;
   let guideHref: string | null = null;
@@ -241,7 +290,6 @@ export async function CourseClassroom({
     guideSubtitle = nextLesson.title;
     guideHref = `/dashboard/student/courses/${courseId}/lessons/${nextLesson.id}`;
   } else if (isCourseComplete) {
-    // If the course is complete, auto-guide to the next course in the learning path.
     const { data: blocks } = await supabase
       .from("learning_blocks")
       .select("id, order_index")
@@ -262,7 +310,10 @@ export async function CourseClassroom({
         order_index: number;
       }[];
 
-      const coursesByBlock = new Map<string, { course_id: string; order_index: number }[]>();
+      const coursesByBlock = new Map<
+        string,
+        { course_id: string; order_index: number }[]
+      >();
       for (const r of rows) {
         const arr = coursesByBlock.get(r.block_id) ?? [];
         arr.push({ course_id: r.course_id, order_index: r.order_index });
@@ -277,8 +328,13 @@ export async function CourseClassroom({
         for (const x of list) orderedCourseIds.push(x.course_id);
       }
 
-      const currentIndex = orderedCourseIds.findIndex((id) => id === typedCourse.id);
-      const nextCourseId = currentIndex >= 0 ? orderedCourseIds[currentIndex + 1] : null;
+      const currentCourseIdx = orderedCourseIds.findIndex(
+        (id) => id === typedCourse.id
+      );
+      const nextCourseId =
+        currentCourseIdx >= 0
+          ? orderedCourseIds[currentCourseIdx + 1]
+          : null;
 
       if (nextCourseId) {
         const { data: nextCourseLessons } = await supabase
@@ -290,500 +346,575 @@ export async function CourseClassroom({
 
         const firstLesson = (nextCourseLessons ?? []) as { id: string }[];
         if (firstLesson[0]?.id) {
-          // We keep the subtitle simple (title requires an extra query).
           guideTitle = "Course complete — next course starts now";
           guideSubtitle = "Continue your learning path";
           guideHref = `/dashboard/student/courses/${nextCourseId}/lessons/${firstLesson[0].id}`;
         }
       } else {
         guideTitle = "You finished the learning path";
-        guideSubtitle = "Great work — check certificates anytime";
+        guideSubtitle = "Great work — check your certificates";
         guideHref = "/dashboard/student/certificates";
       }
     }
   }
 
-  // Fetch existing submissions for the active lesson
+  // Existing submission for active lesson
   let existingSubmission: Submission | null = null;
-  if (activeLesson) {
-    if (user) {
-      const { data } = await supabase
-        .from("submissions")
-        .select("*")
-        .eq("student_id", user.id)
-        .eq("lesson_id", activeLesson.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      existingSubmission = data as Submission | null;
-    }
+  if (activeLesson && user) {
+    const { data } = await supabase
+      .from("submissions")
+      .select("*")
+      .eq("student_id", user.id)
+      .eq("lesson_id", activeLesson.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    existingSubmission = data as Submission | null;
   }
 
+  const parsed = activeLesson ? parseLessonContent(activeLesson.content) : null;
+  const resolvedVideoId =
+    (parsed?.inlineYoutubeIds[0] ?? courseVideoById[typedCourse.id]) || null;
+  const currentVideoWatchedAt = activeLesson
+    ? videoWatchedAtByLesson[activeLesson.id] ?? null
+    : null;
+
+  const materials =
+    PILLAR_MATERIALS[typedCourse.pillar] ?? PILLAR_MATERIALS["Digital Literacy"] ?? [];
+
+  const activeLessonNumber = activeLesson
+    ? lessonList.findIndex((l) => l.id === activeLesson.id) + 1
+    : 1;
+
+  // ── Sidebar panel (shared between desktop aside and mobile sheet) ──
+  const SidebarContent = (
+    <>
+      {/* Course header */}
+      <div className="flex-none border-b px-4 py-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            Course Content
+          </p>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+              progressPct === 100
+                ? "bg-gradient-primary text-[#f0f7f5]"
+                : "bg-secondary text-primary"
+            }`}
+          >
+            {progressPct}% COMPLETE
+          </span>
+        </div>
+        <h3 className="font-display text-sm font-semibold leading-snug text-foreground">
+          {typedCourse.title}
+        </h3>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${theme.pill}`}
+          >
+            {typedCourse.pillar}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Layers className="h-3 w-3" />
+            {lessonList.length} lessons
+          </span>
+        </div>
+        {/* Progress bar */}
+        <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-gradient-primary transition-[width] duration-500"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        <p className="mt-1.5 text-[10px] text-muted-foreground">
+          {completedCount} of {totalCount} lessons completed
+        </p>
+      </div>
+
+      {/* Back to catalog */}
+      <div className="flex-none border-b px-4 py-2">
+        <Link
+          href="/dashboard/student/catalog"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to catalog
+        </Link>
+      </div>
+
+      {/* Lesson list */}
+      <div className="flex-1 overflow-y-auto px-3 py-2">
+        {lessonList.length > 0 ? (
+          <LessonSidebarList
+            lessons={lessonList}
+            courseId={courseId}
+            activeLessonId={lessonId ?? lessonList[0]?.id ?? null}
+            lessonStatus={lessonStatusRecord}
+          />
+        ) : (
+          <p className="px-2 py-6 text-center text-xs text-muted-foreground">
+            No lessons yet.
+          </p>
+        )}
+      </div>
+
+      {/* Ask Mentor footer */}
+      <div className="flex-none border-t p-3">
+        <a
+          href="mailto:mentor@springup.co.ke"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-3 py-3 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-[#f0f7f5]"
+        >
+          <MessageSquare className="h-4 w-4" />
+          Ask Mentor a Question
+        </a>
+      </div>
+    </>
+  );
+
   return (
-    <div className="flex flex-1 flex-col gap-2 overflow-hidden md:flex-row md:gap-0">
+    <div className="flex flex-1 overflow-hidden">
       <CourseSidebarAutoCollapse />
-      {/* Lesson sidebar */}
-      <aside
-        className={`relative w-full shrink-0 overflow-hidden border shadow-sm md:sticky md:top-4 md:h-[calc(100svh-2rem)] md:w-72 md:self-start ${theme.quote.border}`}
-      >
-        {/* Deep theme background */}
-        <div
-          className={`pointer-events-none absolute inset-0 ${theme.quote.bg} opacity-70 md:opacity-90`}
-        />
 
-        {/* Desktop: full sidebar */}
-        <div className="relative z-10 hidden h-full flex-col md:flex">
-          <div className="relative flex-none overflow-hidden border-b p-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mb-3 -ml-2 gap-1.5 text-muted-foreground hover:text-foreground hover:bg-transparent"
-              asChild
-            >
-              <Link href="/dashboard/student" className="group">
-                <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
-                Back to Courses
-              </Link>
-            </Button>
-            <h2 className="text-lg font-semibold leading-snug tracking-tight">
-              {typedCourse.title}
-            </h2>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${theme.pill}`}
-              >
-                {typedCourse.pillar}
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Layers className={`h-3.5 w-3.5 ${theme.icon}`} />
-                {lessonList.length} lessons
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Clock className={`h-3.5 w-3.5 ${theme.icon}`} />
-                Est. {Math.max(lessonList.length * 20, 30)}–{lessonList.length * 30} min
-              </span>
-            </div>
-            {typedCourse.description && (
-              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                {typedCourse.description}
-              </p>
-            )}
-          </div>
-
-          {/* Lessons (scroll) */}
-          <div className="flex-1 overflow-y-auto p-3">
-            {lessonList.length > 0 ? (
-              <LessonSidebarList
-                lessons={lessonList}
-                courseId={courseId}
-                activePillClassName={theme.pill}
-                lessonHoverBgClassName={theme.lessonHoverBg}
-                lessonHoverTextClassName={theme.lessonHoverText}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No lessons added yet.
-              </p>
-            )}
-          </div>
-
-          {/* Resources (pinned bottom) */}
-          <div className="flex-none border-t p-3">
-            <div className="rounded-lg border bg-card/30 p-3">
-              <p className="flex items-center gap-2 text-xs font-semibold">
-                <BookOpen className={`h-3.5 w-3.5 ${theme.icon}`} />
-                Resources
-              </p>
-              <div className="mt-2 space-y-2 text-xs">
-                <a
-                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                  href="https://support.microsoft.com/word"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <ExternalLink className={`h-3.5 w-3.5 ${theme.icon}`} />
-                    Microsoft Word support
-                  </span>
-                  <span className="text-[10px] uppercase tracking-wide opacity-70">
-                    Opens
-                  </span>
-                </a>
-                <a
-                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                  href="https://support.microsoft.com/office/keyboard-shortcuts-in-microsoft-word-95ef89dd-7142-4b50-afb2-f762f663ceb2"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <Keyboard className={`h-3.5 w-3.5 ${theme.icon}`} />
-                    Word keyboard shortcuts
-                  </span>
-                  <span className="text-[10px] uppercase tracking-wide opacity-70">
-                    Opens
-                  </span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile: compact summary + lessons/resources in a sheet */}
-        <div className="relative z-10 p-3 md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <button
-                type="button"
-                className="w-full rounded-xl border bg-card/60 px-3 py-2 text-left shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">
-                      {typedCourse.title}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span
-                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${theme.pill}`}
-                      >
-                        {typedCourse.pillar}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Layers className={`h-3.5 w-3.5 ${theme.icon}`} />
-                        {previewCount} lessons
-                      </span>
-                    </div>
-
-                    {activeLesson && (
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-background/60 text-xs font-semibold text-foreground">
-                          {activeLessonNumber}
-                        </span>
-                        <p className="min-w-0 truncate text-xs text-muted-foreground">
-                          Now taking: {activeLesson.title}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full"
-                      asChild
-                    >
-                      <Link href="/dashboard/student" aria-label="Back to courses">
-                        <ArrowLeft className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      View more
-                    </span>
-                  </div>
-                </div>
-              </button>
-            </SheetTrigger>
-
-            <SheetContent
-              side="top"
-              className="rounded-b-2xl border-x-0 border-b-0 p-0"
-            >
-              <div className="max-h-[85svh] overflow-hidden">
-                <div className="relative overflow-hidden border-b p-4">
-                  <div className={`pointer-events-none absolute inset-0 ${theme.quote.bg} opacity-70`} />
-                  <div className="relative">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mb-3 -ml-2 gap-1.5 text-muted-foreground hover:text-foreground"
-                      asChild
-                    >
-                      <Link href="/dashboard/student" className="group">
-                        <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
-                        Back to Courses
-                      </Link>
-                    </Button>
-                    <h2 className="text-lg font-semibold leading-snug tracking-tight">
-                      {typedCourse.title}
-                    </h2>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span
-                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${theme.pill}`}
-                      >
-                        {typedCourse.pillar}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Layers className={`h-3.5 w-3.5 ${theme.icon}`} />
-                        {lessonList.length} lessons
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock className={`h-3.5 w-3.5 ${theme.icon}`} />
-                        Est. {Math.max(lessonList.length * 20, 30)}–{lessonList.length * 30} min
-                      </span>
-                    </div>
-                    {typedCourse.description && (
-                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                        {typedCourse.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex max-h-[85svh] flex-col">
-                  <div className="flex-1 overflow-y-auto p-3">
-                    {lessonList.length > 0 ? (
-                      <LessonSidebarList
-                        lessons={lessonList}
-                        courseId={courseId}
-                        activePillClassName={theme.pill}
-                        lessonHoverBgClassName={theme.lessonHoverBg}
-                        lessonHoverTextClassName={theme.lessonHoverText}
-                      />
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        No lessons added yet.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex-none border-t p-3">
-                    <div className="rounded-lg border bg-card/30 p-3">
-                      <p className="flex items-center gap-2 text-xs font-semibold">
-                        <BookOpen className={`h-3.5 w-3.5 ${theme.icon}`} />
-                        Resources
-                      </p>
-                      <div className="mt-2 space-y-2 text-xs">
-                        <a
-                          className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                          href="https://support.microsoft.com/word"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <span className="inline-flex items-center gap-2">
-                            <ExternalLink
-                              className={`h-3.5 w-3.5 ${theme.icon}`}
-                            />
-                            Microsoft Word support
-                          </span>
-                          <span className="text-[10px] uppercase tracking-wide opacity-70">
-                            Opens
-                          </span>
-                        </a>
-                        <a
-                          className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-                          href="https://support.microsoft.com/office/keyboard-shortcuts-in-microsoft-word-95ef89dd-7142-4b50-afb2-f762f663ceb2"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <span className="inline-flex items-center gap-2">
-                            <Keyboard className={`h-3.5 w-3.5 ${theme.icon}`} />
-                            Word keyboard shortcuts
-                          </span>
-                          <span className="text-[10px] uppercase tracking-wide opacity-70">
-                            Opens
-                          </span>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </aside>
-
-      {/* Main content */}
+      {/* ── Main scrollable content ──────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        {activeLesson ? (
-          <div className="flex h-full flex-col overflow-hidden rounded-xl border bg-card shadow-sm">
-            <div className="relative overflow-hidden border-b px-4 py-4 sm:px-6 sm:py-5">
-              <div
-                className={`pointer-events-none absolute inset-0 ${theme.quote.bg} opacity-55`}
-              />
-              <div className="relative z-10">
-                <h1 className="text-lg font-bold tracking-tight sm:text-xl md:text-3xl">
+
+        {/* Sticky breadcrumb / top bar */}
+        <div className="sticky top-0 z-10 flex shrink-0 items-center gap-2 border-b bg-background/90 px-4 py-2.5 backdrop-blur-sm">
+          <Link
+            href="/dashboard/student/catalog"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+          </Link>
+          <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="hidden truncate sm:inline">{typedCourse.title}</span>
+            {activeLesson && (
+              <>
+                <ChevronRight className="h-3 w-3 shrink-0 opacity-50" />
+                <span className="truncate font-medium text-foreground">
                   {activeLesson.title}
-                </h1>
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground/80">
-                    Lesson{" "}
-                    {lessonList.findIndex((l) => l.id === activeLesson.id) + 1} /{" "}
-                    {lessonList.length}
-                  </span>
-                  <span className="hidden sm:inline">•</span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Clock className={`h-3.5 w-3.5 ${theme.icon}`} />
-                    20–30 min
-                  </span>
+                </span>
+              </>
+            )}
+          </div>
+          {/* Mobile: Course Content sheet trigger */}
+          <div className="ml-auto lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold text-primary"
+                >
+                  <Layers className="h-3.5 w-3.5" />
+                  {progressPct}%
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="flex w-80 flex-col p-0"
+              >
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Course Content</SheetTitle>
+                </SheetHeader>
+                {SidebarContent}
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto">
+          {activeLesson ? (
+            <div className="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6 lg:p-8">
+
+              {/* ── Video player ───────────────────────────── */}
+              {resolvedVideoId && (
+                <div className="overflow-hidden rounded-2xl bg-black shadow-ambient ring-1 ring-border/50">
+                  <div className="aspect-video w-full">
+                    <iframe
+                      className="h-full w-full"
+                      src={`https://www.youtube.com/embed/${resolvedVideoId}?rel=0`}
+                      title="Lesson video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ── Lesson header ───────────────────────────── */}
+              <div className="space-y-4">
+                <div>
+                  {/* Lesson counter + pillar */}
+                  <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${theme.pill}`}
+                    >
+                      {typedCourse.pillar}
+                    </span>
+                    <span className="font-medium text-muted-foreground">
+                      Lesson {activeLessonNumber} / {totalCount}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className={`h-3.5 w-3.5 ${theme.icon}`} />
+                      20–30 min
+                    </span>
+                    {existingSubmission && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Academic Credit
+                      </span>
+                    )}
+                  </div>
+
+                  <h1 className="font-display text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
+                    {activeLesson.title}
+                  </h1>
+
+                  {parsed?.tagline && (
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                      {parsed.tagline}
+                    </p>
+                  )}
                 </div>
 
-                {/* Progress bar at top */}
-                <div className="mt-3">
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span className="inline-flex items-center gap-2 font-medium text-foreground/80">
+                {/* Action buttons */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {resolvedVideoId && (
+                    <MarkCompleteBtn
+                      lessonId={activeLesson.id}
+                      courseId={courseId}
+                      watchedAt={currentVideoWatchedAt}
+                    />
+                  )}
+                  {nextAdjacentLesson && (
+                    <Link
+                      href={`/dashboard/student/courses/${courseId}/lessons/${nextAdjacentLesson.id}`}
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-[#f0f7f5] transition-opacity hover:opacity-90"
+                    >
+                      Next Lesson
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  )}
+                  {resolvedVideoId && (
+                    <a
+                      href={`https://www.youtube.com/watch?v=${resolvedVideoId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground underline-offset-2 hover:underline"
+                    >
+                      <PlayCircle className="h-3.5 w-3.5" />
+                      Open on YouTube
+                    </a>
+                  )}
+                </div>
+
+                {/* Course progress bar */}
+                <div className="rounded-2xl bg-secondary/40 px-5 py-4">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 font-medium text-foreground/80">
                       <CheckCircle2 className={`h-3.5 w-3.5 ${theme.icon}`} />
-                      Progress
+                      Course progress
                     </span>
-                    <span>
+                    <span className="tabular-nums text-muted-foreground">
                       {completedCount}/{totalCount} ({progressPct}%)
                     </span>
                   </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-background/60">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted/80">
                     <div
-                      className="h-full rounded-full bg-primary transition-[width] duration-300"
+                      className="h-full rounded-full bg-gradient-primary transition-[width] duration-300"
                       style={{ width: `${progressPct}%` }}
                     />
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
-              {guideHref && guideTitle && (
-                <div
-                  className={`mb-5 rounded-xl border bg-card/60 p-4 shadow-sm ${theme.quote.bg}`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className={`h-4 w-4 ${theme.icon}`} />
-                        <p className="truncate text-sm font-semibold">{guideTitle}</p>
-                      </div>
-                      {guideSubtitle && (
-                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                          {guideSubtitle}
-                        </p>
-                      )}
-                    </div>
-
-                    <Button asChild size="sm" className="shrink-0">
-                      <Link href={guideHref}>
-                        Go next
-                        <ArrowRight className="ml-1 h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
+              {/* ── Lesson content ──────────────────────────── */}
+              {parsed?.mainBody?.trim() ? (
+                <div className="prose prose-sm prose-slate dark:prose-invert max-w-none text-foreground [&_p]:leading-relaxed">
+                  {parsed.mainBody.split("\n").map((line, i) =>
+                    renderLessonLine(line, i, theme.quote)
+                  )}
                 </div>
+              ) : null}
+
+              {/* ── Lesson navigation ───────────────────────── */}
+              {lessonList.length > 1 && (
+                <LessonNavigation
+                  lessons={lessonList}
+                  currentLessonId={activeLesson.id}
+                  courseId={courseId}
+                />
               )}
 
-              <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">
-                <div>
-                  <div className="prose prose-slate dark:prose-invert max-w-none text-foreground [&_p]:leading-relaxed [&_h1]:mb-2 [&_h1]:mt-7 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mb-1 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mb-1 [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:ml-5">
-                    {activeLesson.content.split("\n").map((line, i) =>
-                      renderLessonLine(line, i, theme)
+              {/* ── Assignment section ──────────────────────── */}
+              <section id="assignment" className="space-y-5">
+
+                {/* Checklist */}
+                <div className="rounded-2xl bg-secondary/50 p-4 ring-1 ring-border/60 sm:p-5">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    This lesson checklist
+                  </p>
+                  <ul className="space-y-2.5">
+                    {resolvedVideoId && (
+                      <li className="flex items-start gap-2.5 text-sm">
+                        {currentVideoWatchedAt ? (
+                          <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${theme.icon}`} />
+                        ) : (
+                          <PlayCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        )}
+                        <span>
+                          <span className="font-medium text-foreground">Watch the lesson video</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {currentVideoWatchedAt
+                              ? "Marked as watched — great focus."
+                              : "Watch then click \u201cMark as Complete\u201d above."}
+                          </span>
+                        </span>
+                      </li>
+                    )}
+                    <li className="flex items-start gap-2.5 text-sm">
+                      {existingSubmission ? (
+                        <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${theme.icon}`} />
+                      ) : (
+                        <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                      )}
+                      <span>
+                        <span className="font-medium text-foreground">Submit your assignment</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {existingSubmission
+                            ? "Your file is in — you can upload a newer version anytime."
+                            : "One file per lesson; supported formats listed in the workspace."}
+                        </span>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Practical Assignment + Submit — side by side */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {/* Practical Assignment */}
+                  <div className="flex flex-col rounded-2xl bg-card p-5 ring-1 ring-border/70 shadow-ambient">
+                    <div className="mb-3 flex items-center gap-2">
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary`}>
+                        <FileText className={`h-4 w-4 ${theme.icon}`} />
+                      </div>
+                      <div>
+                        <p className="font-display text-sm font-semibold leading-snug">
+                          Practical Assignment
+                        </p>
+                        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                          Required for completion
+                        </p>
+                      </div>
+                    </div>
+
+                    {parsed?.taskBody ? (
+                      <div className="prose prose-sm prose-slate dark:prose-invert flex-1 max-w-none text-foreground [&_p]:leading-relaxed [&_li]:ml-3">
+                        {parsed.taskBody.split("\n").map((line, i) =>
+                          renderLessonLine(line, i, theme.quote)
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex-1 space-y-3">
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                          Upload your completed work using the workspace. Follow any
+                          instructions your instructor added in the lesson content.
+                        </p>
+                        <ul className="space-y-1.5 text-sm text-muted-foreground">
+                          <li className="flex items-start gap-2">
+                            <CheckCircle2 className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${theme.icon}`} />
+                            Apply concepts from this lesson
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <CheckCircle2 className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${theme.icon}`} />
+                            Submit your best work for feedback
+                          </li>
+                        </ul>
+                      </div>
                     )}
                   </div>
 
-                  {/* Prev/Next navigation */}
-                  {lessonList.length > 1 && (
-                    <LessonNavigation
-                      lessons={lessonList}
-                      currentLessonId={activeLesson.id}
-                      courseId={courseId}
-                    />
-                  )}
-
-                  <Separator className="my-8" />
-
-                  {/* Submission status */}
-                  {existingSubmission && (
-                    <div className="mb-6 rounded-lg border bg-muted/50 p-4 transition-colors hover:bg-muted/60">
-                      <div className="flex items-center justify-between">
-                        <p className="flex items-center gap-2 text-sm font-medium">
-                          <ClipboardCheck className={`h-4 w-4 ${theme.icon}`} />
-                          Previous Submission
-                        </p>
-                        <Badge
-                          variant={
-                            existingSubmission.status === "reviewed"
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
-                          {existingSubmission.status}
-                        </Badge>
+                  {/* Submit Your Work */}
+                  <div className="flex flex-col rounded-2xl bg-card p-5 ring-1 ring-border/70 shadow-ambient">
+                    <div className="mb-3 flex items-center gap-2">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary">
+                        <UploadCloud className={`h-4 w-4 ${theme.icon}`} />
                       </div>
-                      {existingSubmission.grade !== null && (
-                        <p className="mt-1 text-sm">
-                          Grade:{" "}
-                          <span className="font-semibold">
-                            {existingSubmission.grade}/100
-                          </span>
+                      <div>
+                        <p className="font-display text-sm font-semibold">Submit Your Work</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Drop your .docx or .pdf here
                         </p>
-                      )}
-                      {existingSubmission.feedback && (
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          Feedback: {existingSubmission.feedback}
-                        </p>
-                      )}
+                      </div>
                     </div>
-                  )}
-
-                  {/* Upload zone */}
-                  <div className="rounded-lg border bg-muted/30 p-5 transition-colors hover:bg-muted/40">
-                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-                      <UploadCloud className={`h-4 w-4 ${theme.icon}`} />
-                      Submit Assignment
-                    </h3>
-                    <UploadForm lessonId={activeLesson.id} />
+                    <div className="flex-1">
+                      <UploadForm
+                        lessonId={activeLesson.id}
+                        courseId={courseId}
+                        hasExistingSubmission={!!existingSubmission}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Course video tutorial (right panel) */}
-                {courseVideoById[typedCourse.id] && (
-                  <div className="lg:sticky lg:top-4">
-                    <div className="overflow-hidden rounded-xl border bg-muted/10">
-                      <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
-                        <p className="text-sm font-semibold">Course video</p>
-                        <a
-                          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-                          href={`https://www.youtube.com/watch?v=${courseVideoById[typedCourse.id]}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open on YouTube
-                        </a>
-                      </div>
-                      <div className="relative aspect-video w-full bg-black/5">
-                        <iframe
-                          className="h-full w-full"
-                          src={`https://www.youtube.com/embed/${courseVideoById[typedCourse.id]}?rel=0`}
-                          title="Course video tutorial"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                        <div className="pointer-events-none absolute inset-0 bg-black/25" />
-                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,0,0,0.25)_0%,transparent_65%)]" />
-                      </div>
-                      <div className="border-t px-4 py-3">
-                        <p className="text-xs text-muted-foreground">
-                          Tip: watch once, then do the task immediately.
+                {/* Latest submission */}
+                {existingSubmission && (
+                  <div className="rounded-2xl bg-muted/50 p-5 ring-1 ring-border/60 transition-colors hover:bg-muted/60">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="flex items-center gap-2 text-sm font-medium">
+                          <ClipboardCheck className={`h-4 w-4 ${theme.icon}`} />
+                          Latest submission
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Sent{" "}
+                          {new Date(existingSubmission.created_at).toLocaleString(
+                            undefined,
+                            { dateStyle: "medium", timeStyle: "short" }
+                          )}
                         </p>
                       </div>
+                      <Badge
+                        variant={
+                          existingSubmission.status === "reviewed"
+                            ? "default"
+                            : "secondary"
+                        }
+                        className="shrink-0 capitalize"
+                      >
+                        {existingSubmission.status}
+                      </Badge>
+                    </div>
+                    {existingSubmission.file_url ? (
+                      <p className="mt-3 text-sm">
+                        <a
+                          href={existingSubmission.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-medium text-primary underline decoration-primary/30 underline-offset-2 hover:opacity-90"
+                        >
+                          Open submitted file
+                        </a>
+                      </p>
+                    ) : null}
+                    {existingSubmission.grade !== null && (
+                      <p className="mt-2 text-sm">
+                        Grade:{" "}
+                        <span className="font-semibold">
+                          {existingSubmission.grade}/100
+                        </span>
+                      </p>
+                    )}
+                    {existingSubmission.feedback ? (
+                      <p className="mt-2 rounded-xl bg-background/60 p-3 text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Feedback: </span>
+                        {existingSubmission.feedback}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+
+                {/* Learning path guide card */}
+                {guideHref && guideTitle && (
+                  <div
+                    className={`rounded-2xl bg-card/80 p-4 ring-1 ring-border/80 shadow-ambient ${theme.quote.bg}`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className={`h-4 w-4 ${theme.icon}`} />
+                          <p className="truncate text-sm font-semibold">
+                            {guideTitle}
+                          </p>
+                        </div>
+                        {guideSubtitle && (
+                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                            {guideSubtitle}
+                          </p>
+                        )}
+                      </div>
+                      <Button asChild size="sm" className="shrink-0">
+                        <Link href={guideHref}>
+                          Go next
+                          <ArrowRight className="ml-1 h-4 w-4" />
+                        </Link>
+                      </Button>
                     </div>
                   </div>
                 )}
-              </div>
+              </section>
 
+              {/* ── Lesson Materials ───────────────────────── */}
+              {materials.length > 0 && (
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className={`h-4 w-4 ${theme.icon}`} />
+                      <h4 className="font-display text-sm font-semibold">
+                        Lesson Materials
+                      </h4>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {materials.length} resource{materials.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl bg-muted/40 p-3">
+                    <div className="space-y-1">
+                      {materials.map((mat, i) => (
+                        <a
+                          key={i}
+                          href={mat.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-card"
+                        >
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-muted-foreground ring-1 ring-border/60 transition-colors group-hover:text-primary">
+                            <FileText className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-semibold text-foreground group-hover:text-primary">
+                              {mat.name}
+                            </p>
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {mat.type}
+                            </p>
+                          </div>
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-primary" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              <div className="h-8" aria-hidden />
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-1 items-center justify-center rounded-xl border bg-card py-20 text-center">
-            <div>
-              <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="text-lg font-semibold">No lessons available</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Lessons will appear here once an instructor adds them.
-              </p>
-              <Button variant="outline" className="mt-4" asChild>
-                <Link href="/dashboard/student">Back to Courses</Link>
-              </Button>
+          ) : (
+            /* Empty state */
+            <div className="flex flex-1 items-center justify-center px-6 py-20 text-center">
+              <div>
+                <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
+                <h3 className="font-display text-lg font-semibold">
+                  No lessons available
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Lessons will appear once an instructor adds them.
+                </p>
+                <Button variant="outline" className="mt-4 rounded-xl" asChild>
+                  <Link href="/dashboard/student/catalog">Back to catalog</Link>
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* ── Right sidebar (desktop only) ─────────────────────── */}
+      <aside className="sticky top-0 hidden h-svh w-88 shrink-0 flex-col overflow-hidden border-l bg-card/60 lg:flex">
+        {SidebarContent}
+      </aside>
     </div>
   );
 }
-

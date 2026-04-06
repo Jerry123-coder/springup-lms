@@ -5,6 +5,38 @@ import { createClient } from "@/lib/supabase/server";
 
 type ActionDbError = { message: string };
 
+export async function markLessonVideoWatched(lessonId: string, courseId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "You must be logged in" };
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await supabase.from("lesson_progress" as never).upsert(
+    {
+      student_id: user.id,
+      lesson_id: lessonId,
+      video_watched_at: now,
+      updated_at: now,
+    } as never,
+    { onConflict: "student_id,lesson_id" }
+  );
+
+  if (error) {
+    return { error: (error as ActionDbError).message };
+  }
+
+  revalidatePath(`/dashboard/student/courses/${courseId}/lessons/${lessonId}`);
+  revalidatePath(`/dashboard/student/courses/${courseId}`);
+  revalidatePath("/dashboard/student");
+  revalidatePath("/dashboard/student/progress");
+  return { success: true };
+}
+
 export async function uploadSubmission(formData: FormData) {
   const supabase = await createClient();
   const submissionsTable = supabase.from("submissions" as never) as unknown as {
@@ -22,6 +54,7 @@ export async function uploadSubmission(formData: FormData) {
   }
 
   const lessonId = formData.get("lesson_id") as string;
+  const courseId = formData.get("course_id") as string | null;
   const file = formData.get("file") as File;
 
   if (!lessonId || !file || file.size === 0) {
@@ -55,5 +88,11 @@ export async function uploadSubmission(formData: FormData) {
   }
 
   revalidatePath("/dashboard/student");
+  revalidatePath("/dashboard/student/catalog");
+  revalidatePath("/dashboard/student/progress");
+  if (courseId) {
+    revalidatePath(`/dashboard/student/courses/${courseId}/lessons/${lessonId}`);
+    revalidatePath(`/dashboard/student/courses/${courseId}`);
+  }
   return { success: true };
 }

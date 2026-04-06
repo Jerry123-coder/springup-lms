@@ -47,6 +47,41 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Role-based dashboard areas (matches BLUEPRINT RBAC)
+  if (user && pathname.startsWith("/dashboard")) {
+    const sharedPaths = ["/dashboard/tutorials"];
+    const isSharedRoute = sharedPaths.some(
+      (p) => pathname === p || pathname.startsWith(`${p}/`)
+    );
+    if (!isSharedRoute) {
+      const { data: profileRow } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      const profile = profileRow as { role?: "admin" | "instructor" | "student" } | null;
+      const role = profile?.role ?? "student";
+
+      const home =
+        role === "admin"
+          ? "/dashboard/admin"
+          : role === "instructor"
+            ? "/dashboard/instructor"
+            : "/dashboard/student";
+
+      if (pathname.startsWith("/dashboard/admin") && role !== "admin") {
+        return NextResponse.redirect(new URL(home, request.url));
+      }
+      if (pathname.startsWith("/dashboard/instructor") && role !== "instructor") {
+        return NextResponse.redirect(new URL(home, request.url));
+      }
+      if (pathname.startsWith("/dashboard/student") && role !== "student") {
+        return NextResponse.redirect(new URL(home, request.url));
+      }
+    }
+  }
+
   // Redirect authenticated users away from login page
   if (pathname === "/login" && user) {
     const { data } = await supabase

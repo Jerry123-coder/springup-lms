@@ -2,75 +2,95 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Modern Academy (Scholar Ascent) — see stitch/scholar_ascent/DESIGN.md */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  /* Surfaces */
+  --background: #f7fafc;
+  --foreground: #181c1e;
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #181c1e;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #1e3a5f;
-  --primary-foreground: #f0f9ff;
-  --secondary: #e0f2fe;
-  --secondary-foreground: #0c4a6e;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #10b981;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --destructive-foreground: #ef4444;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #3b82f6;
-  --chart-1: #3b82f6;
-  --chart-2: #10b981;
-  --chart-3: #1e3a5f;
-  --chart-4: #06b6d4;
-  --chart-5: #8b5cf6;
-  --radius: 0.625rem;
-  --sidebar-background: #0f2847;
-  --sidebar-foreground: #e0f2fe;
-  --sidebar-primary: #38bdf8;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1e3a5f;
-  --sidebar-accent-foreground: #e0f2fe;
-  --sidebar-border: #1e3a5f;
-  --sidebar-ring: #38bdf8;
+  --popover-foreground: #181c1e;
+  --muted: #f1f4f6;
+  --muted-foreground: #5a6460;
+  /* Primary teal */
+  --primary: #00342b;
+  --primary-foreground: #f0f7f5;
+  --primary-container: #004d40;
+  /* Warm secondary “glow” for progress / encouragement */
+  --secondary: #e5f4ef;
+  --secondary-foreground: #0d2d26;
+  /* Tertiary accent (course pills, highlights) */
+  --accent: #ffdcc2;
+  --accent-foreground: #2e1500;
+  --destructive: #c53030;
+  --destructive-foreground: #fff5f5;
+  /* Ghost borders — tonal, not harsh lines */
+  --border: color-mix(in srgb, #bfc9c4 35%, transparent);
+  --input: color-mix(in srgb, #bfc9c4 45%, transparent);
+  --ring: #006b5c;
+  --chart-1: #00342b;
+  --chart-2: #006b5c;
+  --chart-3: #94d3c1;
+  --chart-4: #c4a574;
+  --chart-5: #8b6914;
+  --radius: 1rem;
+  --shadow-ambient: 0 12px 40px rgba(24, 28, 30, 0.06);
+  /* Sidebar: deep teal shell */
+  --sidebar-background: #002219;
+  --sidebar-foreground: #e8f2ef;
+  --sidebar-primary: #94d3c1;
+  --sidebar-primary-foreground: #002219;
+  --sidebar-accent: color-mix(in srgb, #ffffff 8%, transparent);
+  --sidebar-accent-foreground: #f0f7f5;
+  --sidebar-border: color-mix(in srgb, #94d3c1 12%, transparent);
+  --sidebar-ring: #94d3c1;
 }
 
 .dark {
-  --background: #0b1120;
-  --foreground: #e2e8f0;
-  --card: #111827;
-  --card-foreground: #e2e8f0;
-  --popover: #111827;
-  --popover-foreground: #e2e8f0;
-  --primary: #38bdf8;
-  --primary-foreground: #0c1829;
-  --secondary: #1e293b;
-  --secondary-foreground: #bae6fd;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #10b981;
-  --accent-foreground: #ffffff;
-  --destructive: #991b1b;
-  --destructive-foreground: #fca5a5;
-  --border: #1e293b;
-  --input: #1e293b;
-  --ring: #38bdf8;
-  --chart-1: #38bdf8;
-  --chart-2: #34d399;
-  --chart-3: #818cf8;
-  --chart-4: #22d3ee;
-  --chart-5: #a78bfa;
-  --sidebar-background: #0a1628;
-  --sidebar-foreground: #e0f2fe;
-  --sidebar-primary: #38bdf8;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1e3a5f;
-  --sidebar-accent-foreground: #e0f2fe;
-  --sidebar-border: #1e3a5f;
-  --sidebar-ring: #38bdf8;
+  /* Surfaces — distinct layers so cards pop off the background */
+  --background: #090e0d;
+  --foreground: #edf2f0;
+  --card: #111a18;
+  --card-foreground: #edf2f0;
+  --popover: #111a18;
+  --popover-foreground: #edf2f0;
+  /* Muted — noticeably lighter than card so secondary content reads */
+  --muted: #1c2a27;
+  --muted-foreground: #b4c8c2;
+  /* Primary teal — bright enough to read on dark bg */
+  --primary: #7ecfb8;
+  --primary-foreground: #041008;
+  --primary-container: #0f4035;
+  /* Secondary — used for hover states, badges */
+  --secondary: #172622;
+  --secondary-foreground: #c8e8df;
+  /* Accent — warm orange tint; foreground must be readable on it */
+  --accent: #3a2818;
+  --accent-foreground: #ffd0a8;
+  --destructive: #f87171;
+  --destructive-foreground: #1f0505;
+  /* Borders — visible but subtle teal tint */
+  --border: color-mix(in srgb, #7ecfb8 20%, transparent);
+  --input: color-mix(in srgb, #7ecfb8 25%, transparent);
+  --ring: #7ecfb8;
+  /* Charts */
+  --chart-1: #7ecfb8;
+  --chart-2: #5eead4;
+  --chart-3: #e0b070;
+  --chart-4: #6ee7b7;
+  --chart-5: #fcd34d;
+  /* Shadow */
+  --shadow-ambient: 0 12px 40px rgba(0, 0, 0, 0.35);
+  /* Sidebar */
+  --sidebar-background: #060c0b;
+  --sidebar-foreground: #ddeee9;
+  --sidebar-primary: #7ecfb8;
+  --sidebar-primary-foreground: #040e0c;
+  --sidebar-accent: color-mix(in srgb, #7ecfb8 14%, transparent);
+  --sidebar-accent-foreground: #edf2f0;
+  --sidebar-border: color-mix(in srgb, #7ecfb8 14%, transparent);
+  --sidebar-ring: #7ecfb8;
 }
 
 @theme inline {
@@ -107,8 +127,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, -apple-system,
     sans-serif;
+  --font-display: var(--font-manrope), var(--font-plus-jakarta), ui-sans-serif,
+    system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -178,5 +200,40 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .shadow-ambient {
+    box-shadow: var(--shadow-ambient);
+  }
+  /* In dark mode cards need a visible border to separate from background */
+  .dark .shadow-ambient {
+    box-shadow: 0 0 0 1px color-mix(in srgb, #7ecfb8 12%, transparent),
+                0 12px 40px rgba(0, 0, 0, 0.45);
+  }
+  .bg-gradient-primary {
+    background-image: linear-gradient(
+      135deg,
+      var(--primary) 0%,
+      var(--primary-container) 100%
+    );
+  }
+  /** Fine grain overlay for Scholar Ascent heroes — depth without harsh lines */
+  .scholar-hero-grain {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.09;
+    mix-blend-mode: overlay;
   }
 }
