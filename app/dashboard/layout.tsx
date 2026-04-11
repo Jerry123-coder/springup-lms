@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
+import { DashboardProviders } from "@/components/dashboard/dashboard-providers";
 import { DashboardUserProvider } from "@/components/dashboard/user-context";
 import type { UserRole } from "@/lib/types/database";
 
@@ -38,10 +39,12 @@ export default async function DashboardLayout({
 
   return (
     <DashboardUserProvider userName={userName} role={role}>
-      <SidebarProvider defaultOpen={defaultOpen}>
-        <AppSidebar role={role} userName={userName} />
-        <SidebarInset>{children}</SidebarInset>
-      </SidebarProvider>
+      <DashboardProviders userId={user.id}>
+        <SidebarProvider defaultOpen={defaultOpen}>
+          <AppSidebar role={role} userName={userName} />
+          <SidebarInset>{children}</SidebarInset>
+        </SidebarProvider>
+      </DashboardProviders>
     </DashboardUserProvider>
   );
 }

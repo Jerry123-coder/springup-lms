@@ -15,6 +15,7 @@ import {
   TrendingUp,
   BarChart3,
   UserCheck,
+  UserCog,
 } from "lucide-react";
 
 import {
@@ -30,6 +31,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { SignoutButton } from "@/components/dashboard/signout-button";
 import type { UserRole } from "@/lib/types/database";
@@ -53,6 +55,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { title: "Instructors", href: "/dashboard/admin/instructors", icon: UserCheck },
     { title: "Cohorts", href: "/dashboard/admin/cohorts", icon: Users2 },
     { title: "Courses", href: "/dashboard/admin/courses", icon: BookOpen },
+    { title: "Users", href: "/dashboard/admin/users", icon: UserCog },
     { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
     tutorialsLink,
     { title: "Settings", href: "/dashboard/admin/settings", icon: Settings },
@@ -124,6 +127,11 @@ function isNavItemActive(pathname: string, href: string): boolean {
 export function AppSidebar({ role, userName, ...props }: AppSidebarProps) {
   const pathname = usePathname();
   const items = navByRole[role];
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const closeMobileMenu = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -131,7 +139,7 @@ export function AppSidebar({ role, userName, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
+              <Link href="/" onClick={closeMobileMenu}>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-xl bg-gradient-primary">
                   <GraduationCap className="size-4 text-white" />
                 </div>
@@ -163,7 +171,7 @@ export function AppSidebar({ role, userName, ...props }: AppSidebarProps) {
                     isActive={isNavItemActive(pathname, item.href)}
                     tooltip={item.title}
                   >
-                    <Link href={item.href}>
+                    <Link href={item.href} onClick={closeMobileMenu}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>

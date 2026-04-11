@@ -209,9 +209,9 @@ function StudentRow({
 
       {/* Detail link */}
       <Link
-        href={`/dashboard/instructor/students/${student.id}`}
+        href={`/dashboard/admin/users/${student.id}`}
         className="flex h-8 w-8 items-center justify-center rounded-xl bg-secondary text-primary transition-colors hover:bg-primary hover:text-[#f0f7f5]"
-        title="View student details"
+        title="View student profile and progress"
       >
         <ArrowRight className="h-3.5 w-3.5" />
       </Link>

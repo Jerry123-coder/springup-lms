@@ -149,7 +149,12 @@ function CreateCohortForm({
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-        <Button type="submit" size="sm" disabled={isPending || !name.trim() || !instructorId}>
+        <Button
+          type="submit"
+          size="sm"
+          loading={isPending}
+          disabled={isPending || !name.trim() || !instructorId}
+        >
           {isPending ? "Creating…" : "Create Cohort"}
         </Button>
       </div>

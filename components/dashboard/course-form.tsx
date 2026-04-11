@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useTransition } from "react";
-import { Loader2, Plus, Save } from "lucide-react";
+import { Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -91,14 +91,8 @@ export function CourseForm({
         disabled={isPending}
         className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
       />
-      <Button type="submit" disabled={isPending} size="sm" className="gap-1.5">
-        {isPending ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : isEdit ? (
-          <Save className="h-3.5 w-3.5" />
-        ) : (
-          <Plus className="h-3.5 w-3.5" />
-        )}
+      <Button type="submit" loading={isPending} disabled={isPending} size="sm" className="gap-1.5">
+        {!isPending && (isEdit ? <Save className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />)}
         {isEdit ? "Save Changes" : "Add Course"}
       </Button>
     </form>

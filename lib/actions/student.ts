@@ -57,11 +57,29 @@ export async function uploadSubmission(formData: FormData) {
   const courseId = formData.get("course_id") as string | null;
   const file = formData.get("file") as File;
 
-  if (!lessonId || !file || file.size === 0) {
+  const uuidRe =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!lessonId || !uuidRe.test(lessonId)) {
+    return { error: "Invalid lesson" };
+  }
+  if (courseId && !uuidRe.test(courseId)) {
+    return { error: "Invalid course" };
+  }
+
+  if (!file || file.size === 0) {
     return { error: "Lesson and file are required" };
   }
 
-  const ext = file.name.split(".").pop();
+  const maxBytes = 15 * 1024 * 1024;
+  if (file.size > maxBytes) {
+    return { error: "File is too large (max 15 MB)" };
+  }
+
+  const rawExt = file.name.split(".").pop() ?? "bin";
+  const ext =
+    /^[a-z0-9]+$/i.test(rawExt) && rawExt.length <= 8
+      ? rawExt.toLowerCase()
+      : "bin";
   const filePath = `${user.id}/${lessonId}/${Date.now()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage

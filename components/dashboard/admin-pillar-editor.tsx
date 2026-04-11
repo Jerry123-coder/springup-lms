@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { ChevronDown, Loader2, Pencil, Save, X } from "lucide-react";
+import { ChevronDown, Pencil, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,8 +180,8 @@ function PillarCard({
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 resize-none"
             />
           </div>
-          <Button type="submit" disabled={isPending} className="h-7 w-full gap-1.5 rounded-xl text-xs">
-            {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+          <Button type="submit" loading={isPending} disabled={isPending} className="h-7 w-full gap-1.5 rounded-xl text-xs">
+            {!isPending && <Save className="h-3 w-3" />}
             {isPending ? "Saving…" : "Save Changes"}
           </Button>
         </form>

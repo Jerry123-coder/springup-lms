@@ -1,95 +1,85 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CheckCircle2, PlayCircle } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from "react";
+import { Play } from "lucide-react";
 
-import { markLessonVideoWatched } from "@/lib/actions/student";
-import { Button } from "@/components/ui/button";
+import { youtubeThumbnailUrls } from "@/lib/youtube";
 import { cn } from "@/lib/utils";
 
+/**
+ * YouTube lesson video: shows a clean thumbnail + play; loads the iframe only after play.
+ * Optional `thumbnailUrl` overrides the default YouTube poster image.
+ */
 export function LessonVideoPlayer({
   videoId,
-  lessonId,
-  courseId,
-  watchedAt,
-  iconClassName,
+  thumbnailUrl,
+  className,
 }: {
   videoId: string;
-  lessonId: string;
-  courseId: string;
-  watchedAt: string | null;
-  iconClassName?: string;
+  thumbnailUrl?: string | null;
+  className?: string;
 }) {
-  const [watched, setWatched] = useState(!!watchedAt);
-  const [pending, setPending] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [thumbFallback, setThumbFallback] = useState(0);
 
-  useEffect(() => {
-    setWatched(!!watchedAt);
-  }, [watchedAt]);
+  const defaults = youtubeThumbnailUrls(videoId);
+  const posterSources = thumbnailUrl?.trim()
+    ? [thumbnailUrl.trim(), ...defaults]
+    : defaults;
 
-  async function markWatched() {
-    setPending(true);
-    const result = await markLessonVideoWatched(lessonId, courseId);
-    setPending(false);
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-    setWatched(true);
-    toast.success("Video marked as watched");
+  if (playing) {
+    return (
+      <div
+        className={cn(
+          "overflow-hidden rounded-2xl bg-black shadow-ambient ring-1 ring-border/50",
+          className
+        )}
+      >
+        <div className="aspect-video w-full">
+          <iframe
+            className="h-full w-full"
+            src={`https://www.youtube.com/embed/${videoId}?rel=0&autoplay=1`}
+            title="Lesson video"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      </div>
+    );
   }
 
+  const src = posterSources[Math.min(thumbFallback, posterSources.length - 1)];
+
   return (
-    <div className="mb-6 overflow-hidden rounded-xl border bg-muted/10">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <PlayCircle className={cn("h-4 w-4", iconClassName)} />
-          <p className="text-sm font-semibold">Lesson video</p>
-          {watched ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:text-emerald-300">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Watched
-            </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">Not watched yet</span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={pending || watched}
-            onClick={() => void markWatched()}
-          >
-            {watched ? "Completed" : pending ? "Saving…" : "Mark as watched"}
-          </Button>
-          <a
-            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-            href={`https://www.youtube.com/watch?v=${videoId}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Open on YouTube
-          </a>
-        </div>
-      </div>
-      <div className="relative aspect-video w-full bg-black/5">
-        <iframe
-          className="h-full w-full"
-          src={`https://www.youtube.com/embed/${videoId}?rel=0`}
-          title="Lesson video"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-      <div className="border-t px-4 py-3">
-        <p className="text-xs text-muted-foreground">
-          When you have finished watching, click &quot;Mark as watched&quot; so your
-          instructor can see your progress.
-        </p>
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={() => setPlaying(true)}
+      className={cn(
+        "group relative aspect-video w-full overflow-hidden rounded-2xl bg-black text-left shadow-ambient ring-1 ring-border/50 outline-none transition hover:ring-primary/40 focus-visible:ring-2 focus-visible:ring-ring",
+        className
+      )}
+      aria-label="Play lesson video"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        className="h-full w-full object-cover"
+        onError={() => {
+          setThumbFallback((i) =>
+            i < posterSources.length - 1 ? i + 1 : i
+          );
+        }}
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-black/30"
+        aria-hidden
+      />
+      <span className="absolute inset-0 flex items-center justify-center">
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-primary shadow-lg transition group-hover:scale-105 group-hover:shadow-xl sm:h-[4.5rem] sm:w-[4.5rem]">
+          <Play className="ml-1 h-9 w-9 fill-current sm:h-10 sm:w-10" aria-hidden />
+        </span>
+      </span>
+    </button>
   );
 }

@@ -2,7 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { UserRole, CourseCategory, CoursePillar, Profile } from "@/lib/types/database";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getSiteUrl } from "@/lib/site-url";
+import type {
+  UserRole,
+  CourseCategory,
+  CoursePillar,
+  Profile,
+  LessonMaterialKind,
+} from "@/lib/types/database";
 
 type ActionDbError = { message: string };
 type EqResult = Promise<{ error: ActionDbError | null }>;
@@ -297,6 +305,94 @@ export async function deleteLesson(formData: FormData) {
   return { success: true };
 }
 
+function revalidateCourseAndStudent(courseId: string) {
+  revalidatePath("/dashboard/admin/courses");
+  revalidatePath(`/dashboard/admin/courses/${courseId}`);
+  revalidatePath("/dashboard/student");
+}
+
+// ─── Lesson materials (links, files, extra videos) ──────────
+
+export async function addLessonMaterial(formData: FormData) {
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError) return { error: authError };
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
+
+  const lessonId = formData.get("lesson_id") as string;
+  const courseId = formData.get("course_id") as string;
+  const title = (formData.get("title") as string)?.trim();
+  const kind = (formData.get("kind") as LessonMaterialKind) || "link";
+  const url = (formData.get("url") as string)?.trim();
+  const thumbnailUrl = (formData.get("thumbnail_url") as string)?.trim() || null;
+  const orderIndex = parseInt(formData.get("order_index") as string, 10) || 0;
+
+  if (!lessonId || !courseId || !title || !url)
+    return { error: "Title, URL, lesson, and course are required" };
+
+  const { error } = await table("lesson_materials").insert({
+    lesson_id: lessonId,
+    title,
+    kind,
+    url,
+    thumbnail_url: thumbnailUrl,
+    order_index: orderIndex,
+  });
+
+  if (error) return { error: error.message };
+  revalidateCourseAndStudent(courseId);
+  return { success: true };
+}
+
+export async function updateLessonMaterial(formData: FormData) {
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError) return { error: authError };
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
+
+  const id = formData.get("id") as string;
+  const courseId = formData.get("course_id") as string;
+  const title = (formData.get("title") as string)?.trim();
+  const kind = (formData.get("kind") as LessonMaterialKind) || "link";
+  const url = (formData.get("url") as string)?.trim();
+  const thumbnailUrl = (formData.get("thumbnail_url") as string)?.trim() || null;
+  const orderIndex = parseInt(formData.get("order_index") as string, 10) || 0;
+
+  if (!id || !courseId || !title || !url)
+    return { error: "Material id, title, URL, and course are required" };
+
+  const { error } = await table("lesson_materials")
+    .update({
+      title,
+      kind,
+      url,
+      thumbnail_url: thumbnailUrl,
+      order_index: orderIndex,
+    })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+  revalidateCourseAndStudent(courseId);
+  return { success: true };
+}
+
+export async function deleteLessonMaterial(formData: FormData) {
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError) return { error: authError };
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
+
+  const id = formData.get("id") as string;
+  const courseId = formData.get("course_id") as string;
+  if (!id || !courseId) return { error: "Material id and course are required" };
+
+  const { error } = await table("lesson_materials").delete().eq("id", id);
+
+  if (error) return { error: error.message };
+  revalidateCourseAndStudent(courseId);
+  return { success: true };
+}
+
 // ─── Instructor permission management ───────────────────────
 
 export async function toggleInstructorCoursePermission(formData: FormData) {
@@ -433,5 +529,123 @@ export async function adminRemoveStudentFromCohort(formData: FormData) {
 
   revalidatePath("/dashboard/admin/cohorts");
   revalidatePath("/dashboard/admin/students");
+  return { success: true };
+}
+
+// ─── Auth admin (service role) — invite / delete users ───────
+
+export async function adminInviteUser(formData: FormData) {
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError) return { error: authError };
+
+  const email = (formData.get("email") as string)?.trim().toLowerCase();
+  const fullName = (formData.get("full_name") as string)?.trim() ?? "";
+  const role = formData.get("role") as UserRole;
+
+  if (!email) return { error: "Email is required" };
+  if (!["student", "instructor", "admin"].includes(role)) {
+    return { error: "Invalid role" };
+  }
+
+  let adminClient: ReturnType<typeof createAdminClient>;
+  try {
+    adminClient = createAdminClient();
+  } catch {
+    return {
+      error:
+        "Invite is not configured. Add SUPABASE_SERVICE_ROLE_KEY to your server environment.",
+    };
+  }
+
+  const siteUrl = getSiteUrl();
+  const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
+    data: { full_name: fullName },
+    redirectTo: `${siteUrl}/auth/callback`,
+  });
+
+  if (error) return { error: error.message };
+
+  const userId = data.user?.id;
+  if (userId) {
+    const table = (name: string) =>
+      supabase.from(name as never) as unknown as LooseTable;
+    const { error: upErr } = await table("profiles")
+      .update({ role, full_name: fullName || email.split("@")[0] })
+      .eq("id", userId);
+    if (upErr) return { error: upErr.message };
+  }
+
+  revalidatePath("/dashboard/admin/users");
+  revalidatePath("/dashboard/admin/students");
+  revalidatePath("/dashboard/admin/instructors");
+  return { success: true };
+}
+
+export async function adminDeleteUser(formData: FormData) {
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError) return { error: authError };
+
+  const {
+    data: { user: current },
+  } = await supabase.auth.getUser();
+  const userId = formData.get("user_id") as string;
+  if (!userId) return { error: "User ID is required" };
+  if (current?.id === userId) {
+    return { error: "You cannot delete your own account" };
+  }
+
+  let adminClient: ReturnType<typeof createAdminClient>;
+  try {
+    adminClient = createAdminClient();
+  } catch {
+    return {
+      error:
+        "Delete is not configured. Add SUPABASE_SERVICE_ROLE_KEY to your server environment.",
+    };
+  }
+
+  const { error } = await adminClient.auth.admin.deleteUser(userId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/dashboard/admin/users");
+  revalidatePath("/dashboard/admin/students");
+  revalidatePath("/dashboard/admin/instructors");
+  revalidatePath("/dashboard/admin");
+  return { success: true };
+}
+
+export async function adminUpdateUserProfile(formData: FormData) {
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError) return { error: authError };
+
+  const userId = formData.get("user_id") as string;
+  const fullName = (formData.get("full_name") as string)?.trim();
+  const email = (formData.get("email") as string)?.trim().toLowerCase();
+
+  if (!userId || !fullName) return { error: "User and full name are required" };
+  if (!email) return { error: "Email is required" };
+
+  const table = (name: string) =>
+    supabase.from(name as never) as unknown as LooseTable;
+  const { error: pErr } = await table("profiles")
+    .update({ full_name: fullName, email })
+    .eq("id", userId);
+  if (pErr) return { error: pErr.message };
+
+  let adminClient: ReturnType<typeof createAdminClient>;
+  try {
+    adminClient = createAdminClient();
+  } catch {
+    return { error: "Service role key missing — profile row updated; auth email not synced." };
+  }
+
+  const { error: aErr } = await adminClient.auth.admin.updateUserById(userId, {
+    email,
+    user_metadata: { full_name: fullName },
+  });
+  if (aErr) return { error: aErr.message };
+
+  revalidatePath("/dashboard/admin/users");
+  revalidatePath(`/dashboard/admin/users/${userId}`);
   return { success: true };
 }

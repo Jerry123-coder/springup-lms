@@ -25,7 +25,14 @@ import {
   updateCourse,
   reorderLessons,
 } from "@/lib/actions/admin";
-import type { Course, CourseCategory, CoursePillar, Lesson } from "@/lib/types/database";
+import { LessonMaterialsEditor } from "@/components/dashboard/lesson-materials-editor";
+import type {
+  Course,
+  CourseCategory,
+  CoursePillar,
+  Lesson,
+  LessonMaterial,
+} from "@/lib/types/database";
 
 const PILLARS: CoursePillar[] = [
   "Digital Literacy",
@@ -47,9 +54,11 @@ type Tab = "curriculum" | "settings";
 export function AdminCourseBuilder({
   course,
   lessons: initialLessons,
+  materialsByLessonId,
 }: {
   course: Course;
   lessons: Lesson[];
+  materialsByLessonId: Record<string, LessonMaterial[]>;
 }) {
   const [activeTab, setActiveTab] = useState<Tab>("curriculum");
   const [lessons, setLessons] = useState<Lesson[]>(
@@ -193,6 +202,7 @@ export function AdminCourseBuilder({
             key={activeLesson.id}
             lesson={activeLesson}
             courseId={course.id}
+            materials={materialsByLessonId[activeLesson.id] ?? []}
             onUpdated={(updated) =>
               setLessons((prev) =>
                 prev.map((l) => (l.id === updated.id ? updated : l))
@@ -271,11 +281,13 @@ function LessonListItem({
 function LessonEditorPanel({
   lesson,
   courseId,
+  materials,
   onUpdated,
   onDeleted,
 }: {
   lesson: Lesson;
   courseId: string;
+  materials: LessonMaterial[];
   onUpdated: (l: Lesson) => void;
   onDeleted: (id: string) => void;
 }) {
@@ -433,13 +445,23 @@ function LessonEditorPanel({
         {/* Save */}
         {!previewMode && (
           <div className="flex justify-end border-t pt-4">
-            <Button type="submit" disabled={isPending} className="gap-2 rounded-xl px-6">
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            <Button type="submit" loading={isPending} disabled={isPending} className="gap-2 rounded-xl px-6">
+              {!isPending && <Save className="h-4 w-4" />}
               {isPending ? "Saving…" : "Save Lesson"}
             </Button>
           </div>
         )}
       </form>
+
+      {!previewMode && (
+        <div className="border-t px-5 pb-5 pt-4">
+          <LessonMaterialsEditor
+            lessonId={lesson.id}
+            courseId={courseId}
+            initialMaterials={materials}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -562,8 +584,13 @@ function AddLessonPanel({
           <Button type="button" variant="secondary" onClick={onClose} className="rounded-xl">
             Cancel
           </Button>
-          <Button type="submit" disabled={isPending || !title.trim()} className="gap-2 rounded-xl px-6">
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          <Button
+            type="submit"
+            loading={isPending}
+            disabled={isPending || !title.trim()}
+            className="gap-2 rounded-xl px-6"
+          >
+            {!isPending && <Plus className="h-4 w-4" />}
             {isPending ? "Adding…" : "Add Lesson"}
           </Button>
         </div>
@@ -635,8 +662,8 @@ function CourseSettingsPanel({ course }: { course: Course }) {
             className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 resize-none"
           />
         </div>
-        <Button type="submit" disabled={isPending} className="w-full gap-2 rounded-xl">
-          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        <Button type="submit" loading={isPending} disabled={isPending} className="w-full gap-2 rounded-xl">
+          {!isPending && <Save className="h-4 w-4" />}
           {isPending ? "Saving…" : saved ? "Saved!" : "Save Settings"}
         </Button>
       </form>

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+import { safeAppRedirectPath } from "@/lib/safe-redirect";
 import type { Database, UserRole } from "@/lib/types/database";
 
 export async function GET(request: Request) {
@@ -46,10 +47,9 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login`);
   }
 
-  if (next && next.startsWith("/") && !next.startsWith("//")) {
-    if (next.startsWith("/dashboard")) {
-      return NextResponse.redirect(`${origin}${next}`);
-    }
+  const safeNext = safeAppRedirectPath(next, origin);
+  if (safeNext) {
+    return NextResponse.redirect(`${origin}${safeNext}`);
   }
 
   const { data } = await supabase

@@ -260,8 +260,8 @@ function CourseCreateForm({ onClose }: { onClose: () => void }) {
           <Button type="button" variant="secondary" size="sm" onClick={onClose} className="rounded-xl">
             Cancel
           </Button>
-          <Button type="submit" size="sm" disabled={isPending} className="gap-1.5 rounded-xl">
-            {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+          <Button type="submit" size="sm" loading={isPending} disabled={isPending} className="gap-1.5 rounded-xl">
+            {!isPending && <Plus className="h-3.5 w-3.5" />}
             {isPending ? "Creating…" : "Create Course"}
           </Button>
         </div>
@@ -464,8 +464,8 @@ function CourseEditPanel({
         </div>
         <div className="mt-3 flex justify-end gap-2">
           <Button type="button" variant="secondary" size="sm" onClick={onClose} className="rounded-xl">Cancel</Button>
-          <Button type="submit" size="sm" disabled={isPending} className="gap-1.5 rounded-xl">
-            {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+          <Button type="submit" size="sm" loading={isPending} disabled={isPending} className="gap-1.5 rounded-xl">
+            {!isPending && <Save className="h-3.5 w-3.5" />}
             {isPending ? "Saving…" : "Save Changes"}
           </Button>
         </div>
@@ -598,8 +598,8 @@ function LessonRow({ lesson, courseId }: { lesson: Lesson; courseId: string }) {
               <Button type="button" variant="secondary" size="sm" onClick={() => setEditing(false)} className="rounded-xl">
                 Cancel
               </Button>
-              <Button type="submit" size="sm" disabled={isPending} className="gap-1.5 rounded-xl">
-                {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              <Button type="submit" size="sm" loading={isPending} disabled={isPending} className="gap-1.5 rounded-xl">
+                {!isPending && <Save className="h-3.5 w-3.5" />}
                 {isPending ? "Saving…" : "Save Lesson"}
               </Button>
             </div>
@@ -658,8 +658,8 @@ function LessonCreateForm({
         </div>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" size="sm" onClick={onClose} className="rounded-xl">Cancel</Button>
-          <Button type="submit" size="sm" disabled={isPending} className="gap-1.5 rounded-xl">
-            {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+          <Button type="submit" size="sm" loading={isPending} disabled={isPending} className="gap-1.5 rounded-xl">
+            {!isPending && <Plus className="h-3.5 w-3.5" />}
             {isPending ? "Adding…" : "Add Lesson"}
           </Button>
         </div>
