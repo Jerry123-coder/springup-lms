@@ -1,20 +1,27 @@
 import type { Metadata } from "next";
-import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
 
-const fontSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
+/**
+ * Self-hosted variable fonts (via @fontsource-variable/*) — no request to
+ * fonts.googleapis.com, so dev/build work offline or behind strict firewalls.
+ */
+// Paths must be string literals (no path.join) so Next can analyze them at build time.
+const fontSans = localFont({
+  src: "../node_modules/@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2",
   variable: "--font-plus-jakarta",
   display: "swap",
+  weight: "200 800",
 });
 
-const fontDisplay = Manrope({
-  subsets: ["latin"],
+const fontDisplay = localFont({
+  src: "../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2",
   variable: "--font-manrope",
   display: "swap",
+  weight: "200 800",
 });
 
 export const metadata: Metadata = {
@@ -47,6 +54,7 @@ export default function RootLayout({
           {children}
           <Toaster richColors position="top-right" />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

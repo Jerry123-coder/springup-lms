@@ -721,10 +721,10 @@ export async function CourseClassroom({
                   </ul>
                 </div>
 
-                {/* Practical Assignment + Submit — side by side */}
-                <div className="grid gap-4 sm:grid-cols-2">
+                {/* Practical Assignment (top) + Submit Your Work (below) */}
+                <div className="flex flex-col gap-4">
                   {/* Practical Assignment */}
-                  <div className="flex flex-col rounded-2xl bg-card p-5 ring-1 ring-border/70 shadow-ambient">
+                  <div className="flex w-full flex-col rounded-2xl bg-card p-5 ring-1 ring-border/70 shadow-ambient">
                     <div className="mb-3 flex items-center gap-2">
                       <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary`}>
                         <FileText className={`h-4 w-4 ${theme.icon}`} />
@@ -766,7 +766,7 @@ export async function CourseClassroom({
                   </div>
 
                   {/* Submit Your Work */}
-                  <div className="flex flex-col rounded-2xl bg-card p-5 ring-1 ring-border/70 shadow-ambient">
+                  <div className="flex w-full flex-col rounded-2xl bg-card p-5 ring-1 ring-border/70 shadow-ambient">
                     <div className="mb-3 flex items-center gap-2">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary">
                         <UploadCloud className={`h-4 w-4 ${theme.icon}`} />

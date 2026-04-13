@@ -55,7 +55,6 @@ export default async function StudentDetailPage({ params }: PageProps) {
     .from("profiles")
     .select("id, full_name, email, role, created_at")
     .eq("id", studentId)
-    .eq("role", "student")
     .single();
 
   if (!sp) notFound();

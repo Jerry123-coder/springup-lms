@@ -190,7 +190,7 @@ function CourseCreateForm({ onClose }: { onClose: () => void }) {
     });
   }
 
-  return (
+            return (
     <div className="overflow-hidden rounded-2xl border-2 border-dashed border-primary/40 bg-card shadow-ambient">
       <div className="flex items-center justify-between border-b bg-muted/30 px-5 py-3">
         <div className="flex items-center gap-2">
@@ -282,7 +282,7 @@ function CourseCard({ course }: { course: CourseWithLessons }) {
       {/* Course header */}
       <div className="flex items-start gap-3 p-5">
         {/* Expand toggle */}
-        <button
+                  <button
           type="button"
           onClick={() => { setExpanded(!expanded); setEditing(false); }}
           className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
@@ -290,22 +290,22 @@ function CourseCard({ course }: { course: CourseWithLessons }) {
           {expanded
             ? <ChevronDown className="h-4 w-4" />
             : <ChevronRight className="h-4 w-4" />}
-        </button>
+                  </button>
 
         {/* Info */}
-        <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-display text-sm font-semibold text-foreground">{course.title}</span>
             <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${style.pill}`}>
               {course.pillar}
-            </span>
+                      </span>
             {course.category && course.category !== "Other" && (
               <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                 {course.category}
-              </span>
+                      </span>
             )}
-          </div>
-          {course.description && (
+                    </div>
+                    {course.description && (
             <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{course.description}</p>
           )}
           {/* Stats mini row */}
@@ -325,12 +325,12 @@ function CourseCard({ course }: { course: CourseWithLessons }) {
                 <ClipboardCheck className="h-3.5 w-3.5" />
                 <strong>{course.pendingCount}</strong> pending
               </span>
-            )}
-          </div>
+                    )}
+                  </div>
         </div>
 
         {/* Action buttons */}
-        <div className="flex shrink-0 items-center gap-1">
+                  <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             title="Edit course"
@@ -340,12 +340,12 @@ function CourseCard({ course }: { course: CourseWithLessons }) {
                 ? "bg-primary text-[#f0f7f5]"
                 : "bg-secondary text-primary hover:bg-primary hover:text-[#f0f7f5]"
             }`}
-          >
-            <Pencil className="h-3.5 w-3.5" />
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
           </button>
           <DeleteCourseButton courseId={course.id} courseTitle={course.title} />
-        </div>
-      </div>
+                  </div>
+                </div>
 
       {/* Edit course panel */}
       {editing && (
@@ -355,26 +355,26 @@ function CourseCard({ course }: { course: CourseWithLessons }) {
       {/* Lessons panel */}
       {expanded && (
         <div className="border-t bg-muted/20">
-          {course.lessons.length === 0 ? (
+                    {course.lessons.length === 0 ? (
             <p className="px-5 py-6 text-center text-sm text-muted-foreground">
               No lessons yet — add one below.
-            </p>
-          ) : (
-            <div className="divide-y">
+                      </p>
+                    ) : (
+                      <div className="divide-y">
               {course.lessons
                 .slice()
                 .sort((a, b) => a.order_index - b.order_index)
                 .map((lesson) => (
                   <LessonRow key={lesson.id} lesson={lesson} courseId={course.id} />
-                ))}
-            </div>
-          )}
+                        ))}
+                      </div>
+                    )}
 
           {/* Add lesson trigger */}
           <div className="border-t bg-muted/10 px-5 py-3">
             {addingLesson ? (
               <LessonCreateForm
-                courseId={course.id}
+                            courseId={course.id}
                 nextIndex={course.lessons.length + 1}
                 onClose={() => setAddingLesson(false)}
               />
@@ -386,12 +386,12 @@ function CourseCard({ course }: { course: CourseWithLessons }) {
               >
                 <Plus className="h-3.5 w-3.5" /> Add Lesson
               </button>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
 }
 
 // ── Course edit panel ─────────────────────────────────────────────

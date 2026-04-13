@@ -1,19 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SpringLogo } from "@/components/marketing/spring-logo";
+import {
+  LANDING_SECTION_PARAM,
+  getLandingScrollElementId,
+  type LandingSectionKey,
+} from "@/lib/marketing-anchors";
 
-const navLinks = [
-  { label: "Mission",    href: "#mission"     },
-  { label: "Curriculum", href: "#curriculum"  },
-  { label: "Impact",     href: "#impact"      },
+/** Keys match `?section=`; `scrollSpyId` is the DOM id used for active-section detection. */
+const navSections: {
+  label: string;
+  key: LandingSectionKey;
+  scrollSpyId: string;
+}[] = [
+  { label: "Mission", key: "mission", scrollSpyId: "mission" },
+  { label: "Curriculum", key: "curriculum", scrollSpyId: "curriculum" },
+  { label: "Impact", key: "impact", scrollSpyId: "impact" },
 ];
 
 export function Navbar() {
@@ -21,7 +31,25 @@ export function Navbar() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const isHome = pathname === "/";
+
+  const goToSection = useCallback(
+    (key: LandingSectionKey) => {
+      setMobileOpen(false);
+      if (isHome) {
+        const id = getLandingScrollElementId(key);
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        window.history.replaceState(null, "", "/");
+      } else {
+        router.push(`/?${LANDING_SECTION_PARAM}=${key}`);
+      }
+    },
+    [isHome, router]
+  );
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -31,8 +59,11 @@ export function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (!isHome) { setActiveSection(null); return; }
-    const sectionIds = navLinks.map((l) => l.href.slice(1));
+    if (!isHome) {
+      setActiveSection(null);
+      return;
+    }
+    const sectionIds = navSections.map((s) => s.scrollSpyId);
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
@@ -75,35 +106,32 @@ export function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-1 md:flex">
-          {navLinks.map((link, i) => {
-            const sectionId = link.href.slice(1);
-            const isActive = activeSection === sectionId;
-            const href = isHome ? link.href : `/${link.href}`;
+          {navSections.map((section, i) => {
+            const isActive = activeSection === section.scrollSpyId;
             return (
               <motion.div
-                key={link.href}
+                key={section.key}
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 + i * 0.06 }}
               >
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
+                  onClick={() => goToSection(section.key)}
                   className={`relative font-medium transition-colors hover:bg-white/10 hover:text-white ${
                     isActive ? "bg-white/12 text-[#94d3c1]" : "text-[#c8ebe2]/75"
                   }`}
-                  asChild
                 >
-                  <Link href={href}>
-                    {link.label}
-                    {isActive && (
-                      <motion.span
-                        layoutId="nav-active"
-                        className="absolute -bottom-0.5 left-2 right-2 h-px rounded-full bg-[#94d3c1]"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                  </Link>
+                  {section.label}
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-active"
+                      className="absolute -bottom-0.5 left-2 right-2 h-px rounded-full bg-[#94d3c1]"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
                 </Button>
               </motion.div>
             );
@@ -166,26 +194,24 @@ export function Navbar() {
             className="overflow-hidden border-t border-white/10 bg-[#001a14]/95 px-4 backdrop-blur-xl md:hidden"
           >
             <div className="flex flex-col gap-1 py-3">
-              {navLinks.map((link, i) => {
-                const sectionId = link.href.slice(1);
-                const isActive = activeSection === sectionId;
-                const href = isHome ? link.href : `/${link.href}`;
+              {navSections.map((section, i) => {
+                const isActive = activeSection === section.scrollSpyId;
                 return (
                   <motion.div
-                    key={link.href}
+                    key={section.key}
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: i * 0.05 }}
                   >
                     <Button
+                      type="button"
                       variant="ghost"
-                      className={`justify-start font-medium transition-colors hover:bg-white/10 hover:text-white ${
+                      onClick={() => goToSection(section.key)}
+                      className={`w-full justify-start font-medium transition-colors hover:bg-white/10 hover:text-white ${
                         isActive ? "bg-white/12 text-[#94d3c1]" : "text-[#c8ebe2]/75"
                       }`}
-                      asChild
-                      onClick={() => setMobileOpen(false)}
                     >
-                      <Link href={href}>{link.label}</Link>
+                      {section.label}
                     </Button>
                   </motion.div>
                 );

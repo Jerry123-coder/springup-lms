@@ -161,7 +161,7 @@ export function PillarsGrid() {
   const ref = useRef<HTMLElement>(null);
 
   return (
-    <section id="curriculum" ref={ref} className="py-20 md:py-28">
+    <section id="curriculum" ref={ref} className="scroll-mt-24 py-20 md:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* Header */}
         <motion.div

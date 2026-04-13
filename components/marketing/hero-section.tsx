@@ -4,6 +4,8 @@ import type React from "react";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate, useSpring } from "framer-motion";
 
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { LoadingLink } from "@/components/ui/loading-link";
 
@@ -309,7 +311,7 @@ export function HeroSection() {
   return (
     <section
       id="mission"
-      className="relative -mt-16 flex min-h-screen flex-col overflow-hidden pt-16"
+      className="relative -mt-16 flex min-h-screen scroll-mt-24 flex-col overflow-hidden pt-16"
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
     >
@@ -377,29 +379,29 @@ export function HeroSection() {
             <div className="flex w-full max-w-full flex-col items-stretch gap-8 sm:items-start sm:gap-0">
 
               {/* Badge */}
-              <motion.div
+              {/* <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="mb-0 flex items-center gap-2.5 rounded-full border border-[#94d3c1]/30 bg-[#94d3c1]/12 px-4 py-2 backdrop-blur-sm sm:mb-7"
-              >
+              > */}
                 {/* Animated spring logo mark */}
-                <motion.div
+                {/* <motion.div
                   animate={{ y: [0, -3, 0] }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
+                > */}
+                  {/* <svg width="18" height="22" viewBox="0 0 18 22" fill="none">
                     <path d="M 3 20 C 1 18 4 16 6 17 C 8 18 8 20 9 20 C 10 20 10 18 12 17 C 14 16 17 18 15 20" stroke="#94d3c1" strokeWidth="1.4" strokeLinecap="round" fill="none"/>
                     <line x1="9" y1="18" x2="9" y2="4" stroke="#94d3c1" strokeWidth="1.6" strokeLinecap="round"/>
                     <path d="M 9 13 C 6 11 2 10 1 7 C 5 9 8 11 9 13 Z" fill="#94d3c1" opacity="0.8"/>
                     <path d="M 9 9 C 12 7 15 5 16 2 C 13 4 10 7 9 9 Z" fill="#94d3c1" opacity="0.9"/>
                     <circle cx="9" cy="3" r="2.5" fill="#94d3c1"/>
-                  </svg>
-                </motion.div>
-                <span className="text-xs font-semibold tracking-wide text-[#5dd494]">
+                  </svg> */}
+                {/* </motion.div> */}
+                {/* <span className="text-xs font-semibold tracking-wide text-[#5dd494]">
                   Project Spring Up &mdash; Roman Ridge, Accra
-                </span>
-              </motion.div>
+                </span> */}
+              {/* </motion.div> */}
 
               {/* Headline — word-by-word reveal */}
               <h1 className="max-w-2xl font-display text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl lg:text-[70px]">
@@ -478,7 +480,7 @@ export function HeroSection() {
                     className="h-12 w-full border-white/25 bg-white/8 text-base text-white/90 backdrop-blur-sm hover:bg-white/14 hover:text-white"
                     asChild
                   >
-                    <a href="#curriculum">Explore Curriculum</a>
+                    <Link href="/?section=curriculum">Explore Curriculum</Link>
                   </Button>
                 </motion.div>
               </motion.div>

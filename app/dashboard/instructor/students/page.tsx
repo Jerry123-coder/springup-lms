@@ -71,41 +71,75 @@ export default async function InstructorStudentsPage({ searchParams }: PageProps
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Step 1: direct instructor_student_assignments
-  const { data: assignments } = await supabase
-    .from("instructor_student_assignments")
-    .select("student_id")
-    .eq("instructor_id", user.id);
+  // Prefer DB RPC (migration 010): same rules as RLS, avoids client-side chain gaps.
+  const { data: rpcIds, error: rpcErr } = await supabase.rpc(
+    "instructor_visible_student_ids"
+  );
+  const rpcList = rpcIds as string[] | null | undefined;
 
-  let assignedIds = ((assignments ?? []) as { student_id: string }[]).map((a) => a.student_id);
-
-  // Step 2: also collect students from this instructor's cohorts (fallback / union)
-  const { data: instructorCohorts } = await supabase
-    .from("cohorts")
-    .select("id")
-    .eq("instructor_id", user.id);
-
-  const cohortIds = ((instructorCohorts ?? []) as { id: string }[]).map((c) => c.id);
-
-  if (cohortIds.length > 0) {
-    const { data: cohortStudentsData } = await supabase
-      .from("cohort_students")
+  let assignedIds: string[] = [];
+  if (!rpcErr && Array.isArray(rpcList) && rpcList.length > 0) {
+    assignedIds = rpcList;
+  } else {
+    const { data: assignments } = await supabase
+      .from("instructor_student_assignments")
       .select("student_id")
-      .in("cohort_id", cohortIds);
+      .eq("instructor_id", user.id);
 
-    const cohortStudentIds = ((cohortStudentsData ?? []) as { student_id: string }[]).map((r) => r.student_id);
-    assignedIds = [...new Set([...assignedIds, ...cohortStudentIds])];
+    assignedIds = ((assignments ?? []) as { student_id: string }[]).map((a) => a.student_id);
+
+    const { data: primaryCohorts } = await supabase
+      .from("cohorts")
+      .select("id")
+      .eq("instructor_id", user.id);
+    const { data: coInstructorRows } = await supabase
+      .from("cohort_instructors")
+      .select("cohort_id")
+      .eq("instructor_id", user.id);
+
+    const cohortIds = [
+      ...new Set([
+        ...((primaryCohorts ?? []) as { id: string }[]).map((c) => c.id),
+        ...((coInstructorRows ?? []) as { cohort_id: string }[]).map((r) => r.cohort_id),
+      ]),
+    ];
+
+    if (cohortIds.length > 0) {
+      const { data: cohortStudentsData } = await supabase
+        .from("cohort_students")
+        .select("student_id")
+        .in("cohort_id", cohortIds);
+
+      const cohortStudentIds = ((cohortStudentsData ?? []) as { student_id: string }[]).map(
+        (r) => r.student_id
+      );
+      assignedIds = [...new Set([...assignedIds, ...cohortStudentIds])];
+    }
   }
 
-  // Step 3: fetch profiles — scoped to assigned IDs when we have them
+  const [{ data: primaryLabel }, { data: coLabel }] = await Promise.all([
+    supabase.from("cohorts").select("id").eq("instructor_id", user.id),
+    supabase.from("cohort_instructors").select("cohort_id").eq("instructor_id", user.id),
+  ]);
+  const cohortIdsForLabel = [
+    ...new Set([
+      ...((primaryLabel ?? []) as { id: string }[]).map((c) => c.id),
+      ...((coLabel ?? []) as { cohort_id: string }[]).map((r) => r.cohort_id),
+    ]),
+  ];
+
+  // Step 3: fetch profiles — when we have explicit IDs (assignments or cohort),
+  // do not require role = student (cohort rows may reference any profile role;
+  // RLS still limits what instructors can read).
   let studentsQuery = supabase
     .from("profiles")
     .select("id, full_name, email")
-    .eq("role", "student")
     .order("full_name");
 
   if (assignedIds.length > 0) {
     studentsQuery = studentsQuery.in("id", assignedIds);
+  } else {
+    studentsQuery = studentsQuery.eq("role", "student");
   }
 
   const { data: studentsData } = await studentsQuery;
@@ -216,15 +250,18 @@ export default async function InstructorStudentsPage({ searchParams }: PageProps
   const activeCount = studentStats.filter((s) => s.isActive).length;
   const needsSupportCount = studentStats.filter((s) => s.needsSupport).length;
 
-  // Cohort info
-  const { data: cohortData } = await supabase
-    .from("cohorts")
-    .select("name")
-    .eq("instructor_id", user.id)
-    .order("created_at")
-    .limit(1)
-    .maybeSingle();
-  const cohortName = (cohortData as { name?: string } | null)?.name ?? null;
+  // Cohort label (first class they teach, primary or co-instructor)
+  let cohortName: string | null = null;
+  if (cohortIdsForLabel.length > 0) {
+    const { data: cohortData } = await supabase
+      .from("cohorts")
+      .select("name")
+      .in("id", cohortIdsForLabel)
+      .order("created_at")
+      .limit(1)
+      .maybeSingle();
+    cohortName = (cohortData as { name?: string } | null)?.name ?? null;
+  }
 
   return (
     <>

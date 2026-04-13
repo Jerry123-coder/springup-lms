@@ -119,6 +119,13 @@ export interface CohortStudent {
   joined_at: string;
 }
 
+/** Additional instructors assigned to a cohort (primary remains cohorts.instructor_id) */
+export interface CohortInstructor {
+  cohort_id: string;
+  instructor_id: string;
+  joined_at: string;
+}
+
 export interface Certificate {
   id: string;
   student_id: string;
@@ -351,6 +358,12 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      cohort_instructors: {
+        Row: CohortInstructor;
+        Insert: Omit<CohortInstructor, "joined_at"> & { joined_at?: string };
+        Update: never;
+        Relationships: [];
+      };
       certificates: {
         Row: Certificate;
         Insert: CertificateInsert;
@@ -359,7 +372,12 @@ export interface Database {
       };
     };
     Views: {};
-    Functions: {};
+    Functions: {
+      instructor_visible_student_ids: {
+        Args: Record<string, never>;
+        Returns: string[];
+      };
+    };
     Enums: {
       user_role: UserRole;
       course_pillar: CoursePillar;

@@ -158,11 +158,11 @@ export default async function AssignmentCenterPage({
   // Fetch everything in parallel
   const [subsRes, certsRes, lessonsCountRes, blockCoursesRes] = await Promise.all([
     supabase
-      .from("submissions")
-      .select(
+    .from("submissions")
+    .select(
         "id, status, grade, feedback, created_at, file_url, lessons!inner(id, title, course_id, courses!inner(id, title))"
-      )
-      .eq("student_id", user.id)
+    )
+    .eq("student_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("certificates")
@@ -499,7 +499,7 @@ export default async function AssignmentCenterPage({
                   <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-accent/50 px-2.5 text-xs font-bold text-accent-foreground">
                     {pendingSubs.length}
                   </span>
-                </div>
+          </div>
 
                 {pendingSubs.length === 0 ? (
                   <div className="flex flex-col items-center rounded-2xl bg-card/70 px-6 py-10 text-center shadow-ambient">
@@ -535,7 +535,7 @@ export default async function AssignmentCenterPage({
                           <div className="flex shrink-0 items-center gap-2">
                             <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${waitCls}`}>
                               {waitText}
-                            </span>
+                </span>
                             {courseId && lessonId && (
                               <Link
                                 href={`/dashboard/student/courses/${courseId}/lessons/${lessonId}`}
@@ -568,7 +568,7 @@ export default async function AssignmentCenterPage({
                   </div>
                   <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-secondary px-2.5 text-xs font-bold text-primary">
                     {reviewedSubs.length}
-                  </span>
+              </span>
                 </div>
 
                 {reviewedSubs.length === 0 ? (
@@ -637,15 +637,15 @@ export default async function AssignmentCenterPage({
                                   </Link>
                                 )}
                                 {sub.file_url && (
-                                  <Link
+              <Link
                                     href={sub.file_url}
-                                    target="_blank"
-                                    rel="noreferrer"
+                target="_blank"
+                rel="noreferrer"
                                     className="inline-flex items-center gap-1.5 rounded-xl bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-                                  >
+              >
                                     View file
                                     <ExternalLink className="h-3 w-3" />
-                                  </Link>
+              </Link>
                                 )}
                               </div>
                             </div>
@@ -653,7 +653,7 @@ export default async function AssignmentCenterPage({
                         </div>
                       );
                     })}
-                  </div>
+          </div>
                 )}
               </section>
             </div>
@@ -727,9 +727,9 @@ export default async function AssignmentCenterPage({
                       {[0, 1, 2].map((i) => (
                         <div key={i} className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground/30">
                           <Award className="h-5 w-5" />
-                        </div>
-                      ))}
-                    </div>
+        </div>
+      ))}
+    </div>
                     <p className="text-[11px] leading-relaxed text-muted-foreground">
                       Complete a course to earn your first certificate milestone.
                     </p>
@@ -751,8 +751,8 @@ export default async function AssignmentCenterPage({
                               day: "numeric",
                               month: "short",
                             })}
-                          </p>
-                        </div>
+          </p>
+        </div>
                       </div>
                     ))}
                   </div>

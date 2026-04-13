@@ -1,10 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type MouseEvent,
+} from "react";
 import {
   GraduationCap,
   LayoutDashboard,
+  Loader2,
   Users,
   Users2,
   BookOpen,
@@ -124,14 +133,77 @@ function isNavItemActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** Overview routes: only an exact pathname match counts as "arrived" (not deeper segments). */
+const MOBILE_NAV_EXACT_DEST = new Set([
+  "/dashboard/student",
+  "/dashboard/admin",
+  "/dashboard/instructor",
+]);
+
+function mobileNavDestinationReached(pathname: string, dest: string): boolean {
+  if (pathname === dest) return true;
+  if (dest === "/") return false;
+  if (MOBILE_NAV_EXACT_DEST.has(dest)) return false;
+  return pathname.startsWith(`${dest}/`);
+}
+
 export function AppSidebar({ role, userName, ...props }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const items = navByRole[role];
   const { isMobile, setOpenMobile } = useSidebar();
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+  /** Pathname when mobile nav started — avoids closing early while still on a subpath of the target. */
+  const mobileNavFromPathRef = useRef<string | null>(null);
 
-  const closeMobileMenu = () => {
+  const finishMobileNav = useCallback(() => {
+    mobileNavFromPathRef.current = null;
+    setPendingHref(null);
     if (isMobile) setOpenMobile(false);
-  };
+  }, [isMobile, setOpenMobile]);
+
+  useEffect(() => {
+    if (!isMobile || !pendingHref || mobileNavFromPathRef.current === null) {
+      return;
+    }
+    if (pathname === mobileNavFromPathRef.current) {
+      return;
+    }
+    if (mobileNavDestinationReached(pathname, pendingHref)) {
+      finishMobileNav();
+    }
+  }, [pathname, pendingHref, isMobile, finishMobileNav]);
+
+  useEffect(() => {
+    if (!pendingHref) return;
+    const id = window.setTimeout(() => {
+      mobileNavFromPathRef.current = null;
+      setPendingHref(null);
+      if (isMobile) setOpenMobile(false);
+    }, 15_000);
+    return () => window.clearTimeout(id);
+  }, [pendingHref, isMobile, setOpenMobile]);
+
+  const handleMobileNavClick = useCallback(
+    (e: MouseEvent<HTMLAnchorElement>, href: string) => {
+      if (!isMobile) return;
+      if (pathname === href) {
+        setOpenMobile(false);
+        return;
+      }
+      e.preventDefault();
+      mobileNavFromPathRef.current = pathname;
+      setPendingHref(href);
+      startTransition(() => {
+        router.push(href);
+      });
+    },
+    [isMobile, pathname, router, setOpenMobile, startTransition]
+  );
+
+  const headerLoading = isMobile && pendingHref === "/";
+  const navBusy = isMobile && pendingHref !== null;
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -139,9 +211,22 @@ export function AppSidebar({ role, userName, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/" onClick={closeMobileMenu}>
+              <Link
+                href="/"
+                aria-busy={headerLoading || undefined}
+                className={
+                  navBusy && !headerLoading
+                    ? "pointer-events-none opacity-50"
+                    : undefined
+                }
+                onClick={(e) => handleMobileNavClick(e, "/")}
+              >
                 <div className="flex aspect-square size-8 items-center justify-center rounded-xl bg-gradient-primary">
-                  <GraduationCap className="size-4 text-white" />
+                  {headerLoading ? (
+                    <Loader2 className="size-4 animate-spin text-white" aria-hidden />
+                  ) : (
+                    <GraduationCap className="size-4 text-white" />
+                  )}
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Spring Up</span>
@@ -164,20 +249,39 @@ export function AppSidebar({ role, userName, ...props }: AppSidebarProps) {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isNavItemActive(pathname, item.href)}
-                    tooltip={item.title}
-                  >
-                    <Link href={item.href} onClick={closeMobileMenu}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const itemLoading = isMobile && pendingHref === item.href;
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isNavItemActive(pathname, item.href)}
+                      tooltip={item.title}
+                    >
+                      <Link
+                        href={item.href}
+                        aria-busy={itemLoading || undefined}
+                        className={
+                          navBusy && !itemLoading
+                            ? "pointer-events-none opacity-50"
+                            : undefined
+                        }
+                        onClick={(e) => handleMobileNavClick(e, item.href)}
+                      >
+                        {itemLoading ? (
+                          <Loader2
+                            className="size-4 shrink-0 animate-spin"
+                            aria-hidden
+                          />
+                        ) : (
+                          <item.icon />
+                        )}
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

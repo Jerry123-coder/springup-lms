@@ -185,8 +185,6 @@ export async function deleteCourse(formData: FormData) {
 export async function createLesson(formData: FormData) {
   const { supabase, error: authError } = await requireAdmin();
   if (authError) return { error: authError };
-  const table = (name: string) =>
-    supabase.from(name as never) as unknown as LooseTable;
 
   const courseId = formData.get("course_id") as string;
   const title = formData.get("title") as string;
@@ -196,19 +194,23 @@ export async function createLesson(formData: FormData) {
   if (!courseId || !title)
     return { error: "Course ID and title are required" };
 
-  const { error } = await table("lessons").insert({
-    course_id: courseId,
-    title,
-    content,
-    order_index: orderIndex,
-  });
+  const { data: row, error } = await supabase
+    .from("lessons" as never)
+    .insert({
+      course_id: courseId,
+      title,
+      content,
+      order_index: orderIndex,
+    } as never)
+    .select("id, course_id, title, content, order_index, created_at")
+    .single();
 
   if (error) return { error: error.message };
 
   revalidatePath("/dashboard/admin/courses");
   revalidatePath(`/dashboard/admin/courses/${courseId}`);
   revalidatePath("/dashboard/student");
-  return { success: true };
+  return { success: true, lesson: row };
 }
 
 // ─── Pillar settings ─────────────────────────────────────────
@@ -419,22 +421,85 @@ export async function toggleInstructorCoursePermission(formData: FormData) {
 
 // ─── Cohort management (admin) ───────────────────────────────
 
+function parseUuidListJson(raw: string | null): string[] {
+  if (!raw?.trim()) return [];
+  try {
+    const v = JSON.parse(raw) as unknown;
+    if (!Array.isArray(v)) return [];
+    const out: string[] = [];
+    const seen = new Set<string>();
+    for (const x of v) {
+      if (typeof x === "string" && x.length > 0 && !seen.has(x)) {
+        seen.add(x);
+        out.push(x);
+      }
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+async function assertAllRoleInstructor(
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
+  ids: string[]
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (ids.length === 0) return { ok: false, error: "At least one instructor is required" };
+  type Row = { id: string; role: string };
+  const { data, error } = await supabase
+    .from("profiles" as never)
+    .select("id, role")
+    .in("id", ids);
+  if (error) return { ok: false, error: error.message };
+  const rows = (data ?? []) as Row[];
+  if (rows.length !== ids.length)
+    return { ok: false, error: "One or more instructors are invalid" };
+  if (!rows.every((r) => r.role === "instructor"))
+    return { ok: false, error: "All assigned users must be instructors" };
+  return { ok: true };
+}
+
 export async function adminCreateCohort(formData: FormData) {
   const { supabase, error: authError } = await requireAdmin();
   if (authError) return { error: authError };
-  const table = (name: string) =>
-    supabase.from(name as never) as unknown as LooseTable;
 
-  const name = formData.get("name") as string;
-  const instructorId = formData.get("instructor_id") as string;
-  const description = (formData.get("description") as string) || "";
+  const name = (formData.get("name") as string)?.trim();
+  const description = ((formData.get("description") as string) || "").trim();
+  let instructorIds = parseUuidListJson(formData.get("instructor_ids") as string | null);
+  if (instructorIds.length === 0) {
+    const single = (formData.get("instructor_id") as string | null)?.trim();
+    if (single) instructorIds = [single];
+  }
 
-  if (!name || !instructorId) return { error: "Name and instructor are required" };
+  if (!name) return { error: "Name is required" };
 
-  const { error } = await table("cohorts")
-    .insert({ name, instructor_id: instructorId, description });
+  const check = await assertAllRoleInstructor(supabase, instructorIds);
+  if (!check.ok) return { error: check.error };
 
-  if (error) return { error: error.message };
+  const primaryId = instructorIds[0];
+
+  type CohortInsert = {
+    insert: (v: Record<string, unknown>) => {
+      select: (cols: string) => { single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }> };
+    };
+  };
+  const { data: cohortRow, error: insErr } = await (
+    supabase.from("cohorts" as never) as unknown as CohortInsert
+  )
+    .insert({ name, instructor_id: primaryId, description: description || null })
+    .select("id")
+    .single();
+
+  if (insErr) return { error: insErr.message };
+  const cohortId = cohortRow?.id;
+  if (!cohortId) return { error: "Failed to create cohort" };
+
+  const ciRows = instructorIds.map((instructor_id) => ({
+    cohort_id: cohortId,
+    instructor_id,
+  }));
+  const { error: ciErr } = await supabase.from("cohort_instructors" as never).insert(ciRows as never);
+  if (ciErr) return { error: ciErr.message };
 
   revalidatePath("/dashboard/admin/cohorts");
   revalidatePath("/dashboard/instructor/cohorts");
@@ -461,24 +526,44 @@ export async function adminDeleteCohort(formData: FormData) {
   return { success: true };
 }
 
-export async function adminUpdateCohortInstructor(formData: FormData) {
+/** Replace the full instructor list; first id becomes cohorts.instructor_id (primary). */
+export async function adminSetCohortInstructors(formData: FormData) {
   const { supabase, error: authError } = await requireAdmin();
   if (authError) return { error: authError };
   const table = (name: string) =>
     supabase.from(name as never) as unknown as LooseTable;
 
   const cohortId = formData.get("cohort_id") as string;
-  const instructorId = formData.get("instructor_id") as string;
+  const instructorIds = parseUuidListJson(formData.get("instructor_ids") as string | null);
 
-  if (!cohortId || !instructorId) return { error: "Cohort and instructor IDs are required" };
+  if (!cohortId) return { error: "Cohort ID is required" };
 
-  const { error } = await table("cohorts")
-    .update({ instructor_id: instructorId })
+  const check = await assertAllRoleInstructor(supabase, instructorIds);
+  if (!check.ok) return { error: check.error };
+
+  const primaryId = instructorIds[0];
+
+  const { error: upErr } = await table("cohorts")
+    .update({ instructor_id: primaryId })
     .eq("id", cohortId);
+  if (upErr) return { error: upErr.message };
 
-  if (error) return { error: error.message };
+  type DelCi = {
+    delete: () => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> };
+  };
+  const { error: delErr } = await (
+    supabase.from("cohort_instructors" as never) as unknown as DelCi
+  )
+    .delete()
+    .eq("cohort_id", cohortId);
+  if (delErr) return { error: delErr.message };
+
+  const ciRows = instructorIds.map((instructor_id) => ({ cohort_id: cohortId, instructor_id }));
+  const { error: ciErr } = await supabase.from("cohort_instructors" as never).insert(ciRows as never);
+  if (ciErr) return { error: ciErr.message };
 
   revalidatePath("/dashboard/admin/cohorts");
+  revalidatePath("/dashboard/instructor/cohorts");
   return { success: true };
 }
 
@@ -501,6 +586,56 @@ export async function adminAddStudentToCohort(formData: FormData) {
   revalidatePath("/dashboard/admin/cohorts");
   revalidatePath("/dashboard/admin/students");
   return { success: true };
+}
+
+export async function adminAddStudentsToCohortBulk(formData: FormData) {
+  const { supabase, error: authError } = await requireAdmin();
+  if (authError) return { error: authError };
+
+  const cohortId = formData.get("cohort_id") as string;
+  const studentIds = parseUuidListJson(formData.get("student_ids") as string | null);
+
+  if (!cohortId) return { error: "Cohort ID is required" };
+  if (studentIds.length === 0) return { error: "Select at least one student" };
+
+  type Row = { id: string; role: string };
+  const { data: profs, error: pErr } = await supabase
+    .from("profiles" as never)
+    .select("id, role")
+    .in("id", studentIds);
+  if (pErr) return { error: pErr.message };
+  const rows = (profs ?? []) as Row[];
+  if (rows.length !== studentIds.length)
+    return { error: "One or more students are invalid" };
+  if (!rows.every((r) => r.role === "student"))
+    return { error: "All selected users must be students" };
+
+  const { data: existing, error: exErr } = await supabase
+    .from("cohort_students" as never)
+    .select("student_id")
+    .eq("cohort_id", cohortId)
+    .in("student_id", studentIds);
+  if (exErr) return { error: exErr.message };
+
+  const already = new Set(
+    ((existing ?? []) as { student_id: string }[]).map((r) => r.student_id)
+  );
+  const toAdd = studentIds.filter((id) => !already.has(id));
+  if (toAdd.length === 0) {
+    revalidatePath("/dashboard/admin/cohorts");
+    revalidatePath("/dashboard/admin/students");
+    return { success: true, added: 0 };
+  }
+
+  const insertRows = toAdd.map((student_id) => ({ cohort_id: cohortId, student_id }));
+  const { error: insErr } = await supabase
+    .from("cohort_students" as never)
+    .insert(insertRows as never);
+  if (insErr) return { error: insErr.message };
+
+  revalidatePath("/dashboard/admin/cohorts");
+  revalidatePath("/dashboard/admin/students");
+  return { success: true, added: toAdd.length };
 }
 
 export async function adminRemoveStudentFromCohort(formData: FormData) {

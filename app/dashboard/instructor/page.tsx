@@ -98,11 +98,21 @@ export default async function InstructorOverviewPage() {
 
   const studentCount = assignedIds.length > 0 ? assignedIds.length : (totalStudentCount ?? 0);
 
-  // Cohorts
-  const { count: cohortCount } = await supabase
-    .from("cohorts")
-    .select("id", { count: "exact", head: true })
-    .eq("instructor_id", user.id);
+  // Cohorts (primary or co-instructor)
+  const [{ data: primaryCohortRows }, { data: coInstructorRows }] = await Promise.all([
+    supabase.from("cohorts").select("id").eq("instructor_id", user.id),
+    supabase.from("cohort_instructors").select("cohort_id").eq("instructor_id", user.id),
+  ]);
+  const primaryIds = new Set(
+    ((primaryCohortRows ?? []) as { id: string }[]).map((r) => r.id)
+  );
+  const coIds = [
+    ...new Set(
+      ((coInstructorRows ?? []) as { cohort_id: string }[]).map((r) => r.cohort_id)
+    ),
+  ];
+  const onlyCo = coIds.filter((id) => !primaryIds.has(id));
+  const cohortCount = primaryIds.size + onlyCo.length;
 
   // Submissions
   const { data: allSubsData } = await supabase
