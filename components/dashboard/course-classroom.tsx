@@ -122,6 +122,16 @@ const PILLAR_MATERIALS: Record<
       type: "WEB",
       url: "https://www.linkedin.com/help/linkedin/answer/a554351",
     },
+    {
+      name: "PowerPoint Help & Training",
+      type: "WEB",
+      url: "https://support.microsoft.com/powerpoint",
+    },
+    {
+      name: "Google Slides Help",
+      type: "WEB",
+      url: "https://support.google.com/docs/topic/9054603",
+    },
   ],
   "Life Skills": [
     {
