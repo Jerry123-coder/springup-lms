@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { SupportDrawer } from "@/components/marketing/support-drawer";
 
 const footerLinks = [
-  { label: "Mission", href: "/#mission" },
-  { label: "Curriculum", href: "/#curriculum" },
+  { label: "Mission", href: "/?section=mission" },
+  { label: "Curriculum", href: "/?section=curriculum" },
+  { label: "Impact", href: "/?section=impact" },
   { label: "Login", href: "/login" },
 ];
 

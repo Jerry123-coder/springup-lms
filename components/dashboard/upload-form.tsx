@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, useTransition } from "react";
-import { FileUp, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { FileUp, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -162,19 +162,11 @@ export function UploadForm({
         <Button
           type="submit"
           variant="ghost"
+          loading={isPending}
           disabled={isPending || !fileName}
           className="min-h-12 rounded-xl bg-gradient-primary px-8 font-medium text-primary-foreground shadow-sm hover:bg-gradient-primary hover:opacity-90"
         >
-          {isPending ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Uploading…
-            </>
-          ) : (
-            <>
-              {hasExistingSubmission ? "Submit latest file" : "Submit assignment"}
-            </>
-          )}
+          {isPending ? "Uploading…" : hasExistingSubmission ? "Submit latest file" : "Submit assignment"}
         </Button>
       </div>
     </form>

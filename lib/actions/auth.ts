@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
+import { safeAppRedirectPath } from "@/lib/safe-redirect";
 import type { UserRole } from "@/lib/types/database";
 
 export async function login(formData: FormData) {
@@ -39,8 +40,9 @@ export async function login(formData: FormData) {
 
   const role: UserRole = ((data ?? null) as { role?: UserRole } | null)?.role ?? "student";
 
-  if (next && next.startsWith("/dashboard")) {
-    redirect(next);
+  const safeNext = safeAppRedirectPath(next, getSiteUrl());
+  if (safeNext) {
+    redirect(safeNext);
   }
 
   if (role === "admin") {
@@ -76,6 +78,62 @@ export async function signup(formData: FormData) {
   }
 
   redirect("/login?message=Check+your+email+to+confirm+your+account");
+}
+
+export async function requestPasswordReset(formData: FormData) {
+  const supabase = await createClient();
+  const email = (formData.get("email") as string)?.trim();
+  if (!email) {
+    redirect("/login/forgot-password?error=" + encodeURIComponent("Email is required"));
+  }
+
+  const siteUrl = getSiteUrl();
+  const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent("/login/update-password")}`;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
+
+  if (error) {
+    redirect(
+      `/login/forgot-password?error=${encodeURIComponent(error.message)}`
+    );
+  }
+
+  redirect(
+    "/login/forgot-password?message=" +
+      encodeURIComponent(
+        "Check your email for a password reset link. If it does not arrive in a few minutes, check your spam folder."
+      )
+  );
+}
+
+export async function updatePassword(formData: FormData) {
+  const supabase = await createClient();
+  const password = formData.get("password") as string;
+  const confirm = formData.get("confirm_password") as string;
+
+  if (!password || password.length < 6) {
+    redirect(
+      "/login/update-password?error=" +
+        encodeURIComponent("Password must be at least 6 characters")
+    );
+  }
+  if (password !== confirm) {
+    redirect(
+      "/login/update-password?error=" + encodeURIComponent("Passwords do not match")
+    );
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    redirect(
+      "/login/update-password?error=" + encodeURIComponent(error.message)
+    );
+  }
+
+  redirect("/login?message=" + encodeURIComponent("Your password has been updated. Sign in with your new password."));
 }
 
 export async function signout() {

@@ -28,7 +28,7 @@ type ProfileRow = {
 async function InstructorGrid() {
   const supabase = await createClient();
 
-  const [instructorsRes, assignsRes, cohortsRes, subsRes] = await Promise.all([
+  const [instructorsRes, assignsRes, cohortsRes, cohortInstRes, subsRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, full_name, email, can_edit_courses, created_at")
@@ -41,6 +41,9 @@ async function InstructorGrid() {
       .from("cohorts")
       .select("id, instructor_id, name"),
     supabase
+      .from("cohort_instructors")
+      .select("cohort_id, instructor_id"),
+    supabase
       .from("submissions")
       .select("id, status, lesson_id")
       .eq("status", "pending"),
@@ -50,9 +53,13 @@ async function InstructorGrid() {
 
   type AssignRow = { instructor_id: string; student_id: string };
   type CohortRow = { id: string; instructor_id: string; name: string };
+  type CohortInstRow = { cohort_id: string; instructor_id: string };
 
   const assigns  = (assignsRes.data ?? []) as AssignRow[];
   const cohorts  = (cohortsRes.data ?? []) as CohortRow[];
+  const cohortInst = cohortInstRes.error
+    ? []
+    : ((cohortInstRes.data ?? []) as CohortInstRow[]);
 
   // Build per-instructor maps
   const studentsByInstructor = new Map<string, number>();
@@ -60,9 +67,22 @@ async function InstructorGrid() {
     studentsByInstructor.set(a.instructor_id, (studentsByInstructor.get(a.instructor_id) ?? 0) + 1);
   }
 
-  const cohortsByInstructor = new Map<string, number>();
+  const cohortSetByInstructor = new Map<string, Set<string>>();
+  function addCohort(instructorId: string, cohortId: string) {
+    if (!cohortSetByInstructor.has(instructorId)) {
+      cohortSetByInstructor.set(instructorId, new Set());
+    }
+    cohortSetByInstructor.get(instructorId)!.add(cohortId);
+  }
   for (const c of cohorts) {
-    cohortsByInstructor.set(c.instructor_id, (cohortsByInstructor.get(c.instructor_id) ?? 0) + 1);
+    addCohort(c.instructor_id, c.id);
+  }
+  for (const row of cohortInst) {
+    addCohort(row.instructor_id, row.cohort_id);
+  }
+  const cohortsByInstructor = new Map<string, number>();
+  for (const [instId, set] of cohortSetByInstructor) {
+    cohortsByInstructor.set(instId, set.size);
   }
 
   // Pending submissions count is platform-wide; show total for all instructors

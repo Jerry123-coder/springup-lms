@@ -18,13 +18,14 @@ const pillars = [
   },
   {
     title: "Career Readiness",
-    description: "Practical tools to compete in the workforce. Presentations, prompt engineering, and graphic design for the AI age.",
+    description:
+      "Dedicated courses for presentation design (slides), prompt engineering, and Canva — plus communication and interview skills.",
     icon: Briefcase,
     accent: "#ffb97a",
     glow: "rgba(255,185,122,0.28)",
     cardBg: "linear-gradient(135deg, rgba(255,185,122,0.12) 0%, rgba(160,80,20,0.06) 100%)",
     borderColor: "rgba(255,185,122,0.22)",
-    highlights: ["Slide Design", "Prompt Engineering", "Graphic Design"],
+    highlights: ["Presentation Design", "Prompt Engineering", "Graphic Design"],
     span: "md:col-span-1",
   },
   {
@@ -161,7 +162,7 @@ export function PillarsGrid() {
   const ref = useRef<HTMLElement>(null);
 
   return (
-    <section id="curriculum" ref={ref} className="py-20 md:py-28">
+    <section id="curriculum" ref={ref} className="scroll-mt-24 py-20 md:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* Header */}
         <motion.div

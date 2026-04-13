@@ -65,6 +65,19 @@ export interface Lesson {
   created_at: string;
 }
 
+export type LessonMaterialKind = "link" | "file" | "video";
+
+export interface LessonMaterial {
+  id: string;
+  lesson_id: string;
+  title: string;
+  kind: LessonMaterialKind;
+  url: string;
+  thumbnail_url: string | null;
+  order_index: number;
+  created_at: string;
+}
+
 export interface Submission {
   id: string;
   student_id: string;
@@ -106,6 +119,13 @@ export interface CohortStudent {
   joined_at: string;
 }
 
+/** Additional instructors assigned to a cohort (primary remains cohorts.instructor_id) */
+export interface CohortInstructor {
+  cohort_id: string;
+  instructor_id: string;
+  joined_at: string;
+}
+
 export interface Certificate {
   id: string;
   student_id: string;
@@ -141,6 +161,17 @@ export interface LessonInsert {
   course_id: string;
   title: string;
   content?: string;
+  order_index?: number;
+  created_at?: string;
+}
+
+export interface LessonMaterialInsert {
+  id?: string;
+  lesson_id: string;
+  title: string;
+  kind?: LessonMaterialKind;
+  url: string;
+  thumbnail_url?: string | null;
   order_index?: number;
   created_at?: string;
 }
@@ -211,6 +242,17 @@ export interface LessonUpdate {
   created_at?: never;
 }
 
+export interface LessonMaterialUpdate {
+  id?: never;
+  lesson_id?: string;
+  title?: string;
+  kind?: LessonMaterialKind;
+  url?: string;
+  thumbnail_url?: string | null;
+  order_index?: number;
+  created_at?: never;
+}
+
 export interface SubmissionUpdate {
   id?: never;
   student_id?: string;
@@ -242,36 +284,49 @@ export interface Database {
         Row: Profile;
         Insert: ProfileInsert;
         Update: ProfileUpdate;
+        Relationships: [];
       };
       courses: {
         Row: Course;
         Insert: CourseInsert;
         Update: CourseUpdate;
+        Relationships: [];
       };
       learning_paths: {
         Row: LearningPath;
         Insert: Omit<LearningPath, "id" | "created_at"> & { id?: string; created_at?: string };
         Update: Partial<Omit<LearningPath, "id" | "created_at">> & { id?: never; created_at?: never };
+        Relationships: [];
       };
       learning_blocks: {
         Row: LearningBlock;
         Insert: Omit<LearningBlock, "id" | "created_at"> & { id?: string; created_at?: string };
         Update: Partial<Omit<LearningBlock, "id" | "created_at">> & { id?: never; created_at?: never };
+        Relationships: [];
       };
       learning_block_courses: {
         Row: LearningBlockCourse;
         Insert: Omit<LearningBlockCourse, "id" | "created_at"> & { id?: string; created_at?: string };
         Update: Partial<Omit<LearningBlockCourse, "id" | "created_at">> & { id?: never; created_at?: never };
+        Relationships: [];
       };
       lessons: {
         Row: Lesson;
         Insert: LessonInsert;
         Update: LessonUpdate;
+        Relationships: [];
+      };
+      lesson_materials: {
+        Row: LessonMaterial;
+        Insert: LessonMaterialInsert;
+        Update: LessonMaterialUpdate;
+        Relationships: [];
       };
       submissions: {
         Row: Submission;
         Insert: SubmissionInsert;
         Update: SubmissionUpdate;
+        Relationships: [];
       };
       lesson_progress: {
         Row: LessonProgress;
@@ -280,6 +335,7 @@ export interface Database {
           student_id?: never;
           lesson_id?: never;
         };
+        Relationships: [];
       };
       instructor_student_assignments: {
         Row: InstructorStudentAssignment;
@@ -288,21 +344,38 @@ export interface Database {
           id?: never;
           created_at?: never;
         };
+        Relationships: [];
       };
       cohorts: {
         Row: Cohort;
         Insert: Omit<Cohort, "id" | "created_at"> & { id?: string; created_at?: string };
         Update: Partial<Omit<Cohort, "id" | "created_at">> & { id?: never; created_at?: never };
+        Relationships: [];
       };
       cohort_students: {
         Row: CohortStudent;
         Insert: Omit<CohortStudent, "joined_at"> & { joined_at?: string };
         Update: never;
+        Relationships: [];
+      };
+      cohort_instructors: {
+        Row: CohortInstructor;
+        Insert: Omit<CohortInstructor, "joined_at"> & { joined_at?: string };
+        Update: never;
+        Relationships: [];
       };
       certificates: {
         Row: Certificate;
         Insert: CertificateInsert;
         Update: CertificateUpdate;
+        Relationships: [];
+      };
+    };
+    Views: {};
+    Functions: {
+      instructor_visible_student_ids: {
+        Args: Record<string, never>;
+        Returns: string[];
       };
     };
     Enums: {

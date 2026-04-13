@@ -1,11 +1,10 @@
 "use client";
 
 import { useRef } from "react";
-import Link from "next/link";
 import { ArrowRight, Heart, Sparkles } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
-import { Button } from "@/components/ui/button";
+import { Button, LoadingLink } from "@/components/ui/button";
 import { SupportDrawer } from "@/components/marketing/support-drawer";
 import { SpringLogo } from "@/components/marketing/spring-logo";
 
@@ -119,27 +118,30 @@ export function CTASection() {
             <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
               <Button
                 size="lg"
-                className="w-full gap-2 bg-gradient-primary text-base font-semibold text-white shadow-lg hover:shadow-primary/30 sm:w-auto"
+                className="w-full gap-2 cursor-pointer text-base font-semibold text-white shadow-lg hover:shadow-primary/30 sm:w-auto"
+                style={{
+                  background: "linear-gradient(135deg, #c8f542 0%, #a8e832 100%)",
+                  color: "#0a2a10",
+                  boxShadow: "0 4px 24px rgba(180,235,50,0.35)",
+                }}
               >
                 <Heart className="h-4 w-4" />
-                Donate Now
+                Support Us
               </Button>
             </motion.div>
           </SupportDrawer>
 
-          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-            <Button
+          {/* <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+            <LoadingLink
+              href="/login"
               size="lg"
               variant="outline"
               className="w-full gap-2 border-white/25 bg-white/8 text-base text-white/90 backdrop-blur-sm hover:bg-white/14 hover:text-white sm:w-auto"
-              asChild
             >
-              <Link href="/login">
-                Join as Volunteer
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </motion.div>
+              Join as Volunteer
+              <ArrowRight className="h-4 w-4" />
+            </LoadingLink>
+          </motion.div> */}
         </motion.div>
 
         {/* Sparkle row */}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { GraduationCap, AlertCircle, CheckCircle2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import {
   Card,
   CardContent,
@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { login, signup } from "@/lib/actions/auth";
+import { getSiteUrl } from "@/lib/site-url";
+import { safeAppRedirectPath } from "@/lib/safe-redirect";
 
 interface LoginPageProps {
   searchParams: Promise<{
@@ -24,15 +26,13 @@ interface LoginPageProps {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const isSignUp = params.tab === "signup";
-  const next = params.next;
+  const next = safeAppRedirectPath(params.next ?? null, getSiteUrl()) ?? undefined;
 
   return (
-    <div className="relative flex min-h-[calc(100svh-8rem)] items-center justify-center px-4">
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-[#0f2847]/5 via-transparent to-emerald-50/50" />
-
-      <Card className="relative w-full max-w-sm border-sky-100 shadow-lg shadow-sky-500/5">
+    <div className="relative flex flex-1 flex-col items-center justify-center px-4 pb-12 pt-4">
+      <Card className="relative w-full max-w-sm border-white/15 bg-card/80 shadow-xl shadow-black/20 backdrop-blur-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-sky-400 to-emerald-400">
+          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-teal-600 shadow-lg shadow-emerald-900/30">
             <GraduationCap className="h-5 w-5 text-white" />
           </div>
           <CardTitle className="text-xl">
@@ -54,7 +54,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           )}
 
           {params.message && (
-            <div className="mb-4 flex items-center gap-2 rounded-md border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
+            <div className="mb-4 flex items-center gap-2 rounded-md border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               {params.message}
             </div>
@@ -109,17 +109,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   required
                 />
               </div>
-              <Button
-                type="submit"
-                className="w-full bg-sky-500 text-white hover:bg-sky-400"
-              >
+              <SubmitButton className="w-full bg-emerald-600 text-white hover:bg-emerald-500">
                 Create Account
-              </Button>
+              </SubmitButton>
               <p className="text-center text-xs text-muted-foreground">
                 Already have an account?{" "}
                 <Link
                   href="/login"
-                  className="text-sky-600 underline-offset-4 hover:underline"
+                  className="text-emerald-600 underline-offset-4 hover:underline dark:text-emerald-400"
                 >
                   Sign in
                 </Link>
@@ -144,12 +141,20 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 />
               </div>
               <div className="space-y-2">
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium leading-none"
-                >
-                  Password
-                </label>
+                <div className="flex items-center justify-between gap-2">
+                  <label
+                    htmlFor="password"
+                    className="text-sm font-medium leading-none"
+                  >
+                    Password
+                  </label>
+                  <Link
+                    href="/login/forgot-password"
+                    className="text-xs font-medium text-emerald-600 underline-offset-4 hover:underline dark:text-emerald-400"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   name="password"
@@ -158,17 +163,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   required
                 />
               </div>
-              <Button
-                type="submit"
-                className="w-full bg-sky-500 text-white hover:bg-sky-400"
-              >
+              <SubmitButton className="w-full bg-emerald-600 text-white hover:bg-emerald-500">
                 Sign In
-              </Button>
+              </SubmitButton>
               <p className="text-center text-xs text-muted-foreground">
                 Don&apos;t have an account?{" "}
                 <Link
                   href="/login?tab=signup"
-                  className="text-sky-600 underline-offset-4 hover:underline"
+                  className="text-emerald-600 underline-offset-4 hover:underline dark:text-emerald-400"
                 >
                   Sign up
                 </Link>
@@ -176,11 +178,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </form>
           )}
 
-          <div className="mt-6">
-            <Button variant="outline" className="w-full" asChild>
+          {/* <div className="mt-6">
+            <Button variant="outline" className="w-full border-white/20 bg-white/5" asChild>
               <Link href="/">Back to Home</Link>
             </Button>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>

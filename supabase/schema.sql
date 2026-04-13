@@ -221,9 +221,10 @@ CREATE POLICY "Admins can view all profiles"
   ON public.profiles FOR SELECT
   USING (public.get_user_role() = 'admin');
 
--- Users can update their own profile (name only, not role)
+-- Users can update their own profile (name, email — not role; admins use separate policy)
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
+  TO authenticated
   USING (id = auth.uid())
   WITH CHECK (id = auth.uid());
 

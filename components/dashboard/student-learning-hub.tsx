@@ -11,7 +11,7 @@ import {
 
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { LoadingLink } from "@/components/ui/button";
 
 function firstName(fullName: string | null | undefined, email: string | null | undefined) {
   if (fullName?.trim()) {
@@ -328,16 +328,17 @@ export async function StudentLearningHub() {
             </p>
           </div>
           {continueTarget ? (
-            <Link
+            <LoadingLink
               href={`/dashboard/student/courses/${continueTarget.courseId}/lessons/${continueTarget.lessonId}`}
+              size="lg"
+              variant="ghost"
               className={cn(
-                buttonVariants({ size: "lg", variant: "ghost" }),
                 "inline-flex min-h-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-primary px-8 text-primary-foreground shadow-sm hover:bg-gradient-primary hover:opacity-90"
               )}
             >
               Resume
               <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+            </LoadingLink>
           ) : null}
         </div>
 
@@ -355,13 +356,13 @@ export async function StudentLearningHub() {
             <p className="text-sm leading-relaxed text-muted-foreground">
               Your next lesson will appear here after you begin a course.
             </p>
-            <Button
-              asChild
+            <LoadingLink
+              href="/dashboard/student/catalog"
               variant="ghost"
               className="min-h-12 rounded-2xl bg-card text-foreground shadow-sm hover:bg-card/90"
             >
-              <Link href="/dashboard/student/catalog">Open course catalog</Link>
-            </Button>
+              Open course catalog
+            </LoadingLink>
           </div>
         )}
       </section>

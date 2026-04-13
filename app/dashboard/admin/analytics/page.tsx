@@ -22,6 +22,7 @@ type ProgRow     = { student_id: string; updated_at: string };
 type CourseRow   = { id: string; title: string; pillar: string };
 type CohortRow   = { id: string; name: string; instructor_id: string };
 type CohortStudentRow = { cohort_id: string; student_id: string };
+type CohortInstRow = { cohort_id: string; instructor_id: string };
 
 // ── Helpers ───────────────────────────────────────────────────────
 function ProgressBar({ pct, className = "" }: { pct: number; className?: string }) {
@@ -76,7 +77,7 @@ function KpiCard({
 async function AnalyticsContent() {
   const supabase = await createClient();
 
-  const [profilesRes, lessonsRes, subsRes, progressRes, coursesRes, cohortsRes, cohortStudentsRes] =
+  const [profilesRes, lessonsRes, subsRes, progressRes, coursesRes, cohortsRes, cohortStudentsRes, cohortInstRes] =
     await Promise.all([
       supabase.from("profiles").select("id, full_name, email, role"),
       supabase.from("lessons").select("id, course_id"),
@@ -85,6 +86,7 @@ async function AnalyticsContent() {
       supabase.from("courses").select("id, title, pillar"),
       supabase.from("cohorts").select("id, name, instructor_id"),
       supabase.from("cohort_students").select("cohort_id, student_id"),
+      supabase.from("cohort_instructors").select("cohort_id, instructor_id"),
     ]);
 
   const profiles      = (profilesRes.data ?? []) as ProfileRow[];
@@ -94,6 +96,9 @@ async function AnalyticsContent() {
   const courses       = (coursesRes.data ?? []) as CourseRow[];
   const cohorts       = (cohortsRes.data ?? []) as CohortRow[];
   const cohortStudents = (cohortStudentsRes.data ?? []) as CohortStudentRow[];
+  const cohortInstructors = cohortInstRes.error
+    ? []
+    : ((cohortInstRes.data ?? []) as CohortInstRow[]);
 
   const students    = profiles.filter((p) => p.role === "student");
   const instructors = profiles.filter((p) => p.role === "instructor");
@@ -162,6 +167,13 @@ async function AnalyticsContent() {
   }
   const instructorById = new Map(instructors.map((i) => [i.id, i]));
 
+  const instructorIdsByCohort = new Map<string, string[]>();
+  for (const row of cohortInstructors) {
+    const arr = instructorIdsByCohort.get(row.cohort_id) ?? [];
+    arr.push(row.instructor_id);
+    instructorIdsByCohort.set(row.cohort_id, arr);
+  }
+
   const cohortStats = cohorts.map((c) => {
     const memberIds = studentsByCohort.get(c.id) ?? [];
     const memberCount = memberIds.length;
@@ -171,8 +183,17 @@ async function AnalyticsContent() {
           (memberCount * totalLessons) * 100
         )
       : 0;
-    const instr = instructorById.get(c.instructor_id);
-    return { ...c, memberCount, avgPct, instructorName: instr?.full_name || instr?.email || "—" };
+    const fromJunction = instructorIdsByCohort.get(c.id) ?? [];
+    const orderedIds =
+      fromJunction.length > 0
+        ? [c.instructor_id, ...fromJunction.filter((id) => id !== c.instructor_id)]
+        : [c.instructor_id];
+    const instructorName = orderedIds
+      .map((id) => instructorById.get(id))
+      .filter(Boolean)
+      .map((p) => p!.full_name || p!.email)
+      .join(", ") || "—";
+    return { ...c, memberCount, avgPct, instructorName };
   }).sort((a, b) => b.avgPct - a.avgPct);
 
   // ── Instructor grading throughput ─────────────────────────────

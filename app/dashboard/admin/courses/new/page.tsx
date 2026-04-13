@@ -2,12 +2,11 @@
 
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, BookOpen, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, BookOpen, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { Button } from "@/components/ui/button";
+import { Button, LoadingLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createCourse } from "@/lib/actions/admin";
 import type { CoursePillar, CourseCategory } from "@/lib/types/database";
@@ -66,12 +65,13 @@ export default function NewCoursePage() {
       <DashboardHeader heading="New Course" />
       <div className="flex-1 p-6">
         {/* Breadcrumb */}
-        <Link
+        <LoadingLink
           href="/dashboard/admin/courses"
-          className="mb-6 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary"
+          variant="ghost"
+          className="mb-6 inline-flex h-auto items-center gap-1.5 px-0 py-0 text-xs font-semibold text-muted-foreground hover:bg-transparent hover:text-primary"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Back to Course Management
-        </Link>
+        </LoadingLink>
 
         <div className="mx-auto max-w-2xl">
           {/* Hero */}
@@ -195,22 +195,21 @@ export default function NewCoursePage() {
 
             {/* Submit */}
             <div className="flex justify-end gap-3">
-              <Link
+              <LoadingLink
                 href="/dashboard/admin/courses"
-                className="inline-flex items-center rounded-xl px-5 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                variant="ghost"
+                className="inline-flex h-auto items-center rounded-xl px-5 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-transparent hover:text-foreground"
               >
                 Cancel
-              </Link>
+              </LoadingLink>
               <Button
                 type="submit"
+                loading={isPending}
                 disabled={isPending || !title.trim()}
                 className="gap-2 rounded-xl px-8 py-2.5"
               >
-                {isPending ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Creating…</>
-                ) : (
-                  <><Plus className="h-4 w-4" /> Create Course</>
-                )}
+                {!isPending && <Plus className="h-4 w-4" />}
+                {isPending ? "Creating…" : "Create Course"}
               </Button>
             </div>
           </form>

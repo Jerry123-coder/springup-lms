@@ -23,7 +23,7 @@ export function ImpactSection() {
     <section
       id="impact"
       ref={ref}
-      className="relative overflow-hidden py-20 md:py-28"
+      className="relative scroll-mt-24 overflow-hidden py-20 md:py-28"
       style={{ background: "linear-gradient(148deg, #001a16 0%, #00342b 30%, #005a4d 60%, #0a5c52 100%)" }}
     >
       {/* Parallax background image */}
@@ -86,7 +86,10 @@ export function ImpactSection() {
           {metrics.map((m, i) => (
             <motion.div
               key={m.label}
-              className="group relative overflow-hidden rounded-2xl p-6 backdrop-blur-sm"
+              id={i === 1 ? "impact-focus" : undefined}
+              className={`group relative overflow-hidden rounded-2xl p-6 backdrop-blur-sm ${
+                i === 1 ? "scroll-mt-28" : ""
+              }`}
               style={{ background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.08)" }}
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}

@@ -3,7 +3,7 @@ import { ArrowRight, BookOpen, CheckCircle2, Circle } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, LoadingLink } from "@/components/ui/button";
 import type { Course, CoursePillar, Lesson } from "@/lib/types/database";
 
 const pillarOrder: CoursePillar[] = [
@@ -256,37 +256,28 @@ export async function StudentProgressTracker() {
                       </div>
                       <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
                         {r.nextLesson ? (
-                          <Button
-                            asChild
+                          <LoadingLink
+                            href={`/dashboard/student/courses/${r.course.id}/lessons/${r.nextLesson.id}`}
                             variant="secondary"
-                            className="rounded-2xl"
+                            className="gap-2 rounded-2xl"
                           >
-                            <Link
-                              href={`/dashboard/student/courses/${r.course.id}/lessons/${r.nextLesson.id}`}
-                              className="gap-2"
-                            >
-                              Next: {r.nextLesson.title}
-                              <ArrowRight className="h-4 w-4" />
-                            </Link>
-                          </Button>
+                            Next: {r.nextLesson.title}
+                            <ArrowRight className="h-4 w-4" />
+                          </LoadingLink>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
                             <CheckCircle2 className="h-4 w-4" />
                             Course complete
                           </span>
                         )}
-                        <Button
-                          asChild
+                        <LoadingLink
+                          href={`/dashboard/student/courses/${r.course.id}`}
                           variant="ghost"
                           size="sm"
                           className="text-muted-foreground"
                         >
-                          <Link
-                            href={`/dashboard/student/courses/${r.course.id}`}
-                          >
-                            Open course
-                          </Link>
-                        </Button>
+                          Open course
+                        </LoadingLink>
                       </div>
                     </div>
 

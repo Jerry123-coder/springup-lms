@@ -5,7 +5,7 @@ import { ArrowLeft, BookOpen, ClipboardCheck, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { AdminCourseBuilder } from "@/components/dashboard/admin-course-builder";
-import type { Course, Lesson } from "@/lib/types/database";
+import type { Course, Lesson, LessonMaterial } from "@/lib/types/database";
 
 type SubRow  = { student_id: string; lesson_id: string; status: string };
 
@@ -32,9 +32,25 @@ export default async function AdminCourseBuilderPage({
   const lessons = ((lessonsRes.data ?? []) as unknown[]) as Lesson[];
   const subs    = ((subsRes.data ?? []) as unknown[]) as SubRow[];
 
+  const lessonIdList = lessons.map((l) => l.id);
+  const materialsByLessonId: Record<string, LessonMaterial[]> = {};
+  if (lessonIdList.length > 0) {
+    const matsRes = await loose(
+      supabase.from("lesson_materials" as never).select("*").in("lesson_id", lessonIdList)
+    );
+    const mats = ((matsRes.data ?? []) as unknown[]) as LessonMaterial[];
+    for (const m of mats) {
+      if (!materialsByLessonId[m.lesson_id]) materialsByLessonId[m.lesson_id] = [];
+      materialsByLessonId[m.lesson_id].push(m);
+    }
+    for (const id of Object.keys(materialsByLessonId)) {
+      materialsByLessonId[id].sort((a, b) => a.order_index - b.order_index);
+    }
+  }
+
   // Filter to only this course's lessons
-  const lessonIds = new Set(lessons.map((l) => l.id));
-  const courseSubs = subs.filter((s) => lessonIds.has(s.lesson_id));
+  const lessonIdSet = new Set(lessonIdList);
+  const courseSubs = subs.filter((s) => lessonIdSet.has(s.lesson_id));
 
   const studentCount = new Set(courseSubs.map((s) => s.student_id)).size;
   const pendingCount = courseSubs.filter((s) => s.status === "pending").length;
@@ -73,6 +89,7 @@ export default async function AdminCourseBuilderPage({
         <AdminCourseBuilder
           course={course}
           lessons={lessons}
+          materialsByLessonId={materialsByLessonId}
         />
       </div>
     </>

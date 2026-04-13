@@ -9,16 +9,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 type ProfileRow   = { id: string; full_name: string; email: string };
 type CohortRow    = { id: string; name: string; description: string | null; instructor_id: string; created_at: string };
 type CohortStudent = { cohort_id: string; student_id: string };
+type CohortInstructorRow = { cohort_id: string; instructor_id: string };
 type SubRow       = { lesson_id: string; student_id: string };
 type LessonRow    = { id: string };
 
 async function CohortData() {
   const supabase = await createClient();
 
-  const [cohortsRes, cohortStudentsRes, instructorsRes, studentsRes, lessonsRes, subsRes] =
+  const [cohortsRes, cohortStudentsRes, cohortInstructorsRes, instructorsRes, studentsRes, lessonsRes, subsRes] =
     await Promise.all([
       supabase.from("cohorts").select("id, name, description, instructor_id, created_at").order("created_at", { ascending: false }),
       supabase.from("cohort_students").select("cohort_id, student_id"),
+      supabase.from("cohort_instructors").select("cohort_id, instructor_id"),
       supabase.from("profiles").select("id, full_name, email").eq("role", "instructor").order("full_name"),
       supabase.from("profiles").select("id, full_name, email").eq("role", "student").order("full_name"),
       supabase.from("lessons").select("id"),
@@ -27,6 +29,9 @@ async function CohortData() {
 
   const cohorts         = (cohortsRes.data ?? []) as CohortRow[];
   const cohortStudentRows = (cohortStudentsRes.data ?? []) as CohortStudent[];
+  const cohortInstructorRows = cohortInstructorsRes.error
+    ? []
+    : ((cohortInstructorsRes.data ?? []) as CohortInstructorRow[]);
   const instructors     = (instructorsRes.data ?? []) as ProfileRow[];
   const allStudents     = (studentsRes.data ?? []) as ProfileRow[];
   const totalLessons    = (lessonsRes.data ?? []).length;
@@ -49,6 +54,13 @@ async function CohortData() {
     membersByCohort.set(cs.cohort_id, arr);
   }
 
+  const instructorIdsByCohort = new Map<string, string[]>();
+  for (const row of cohortInstructorRows) {
+    const arr = instructorIdsByCohort.get(row.cohort_id) ?? [];
+    arr.push(row.instructor_id);
+    instructorIdsByCohort.set(row.cohort_id, arr);
+  }
+
   const enrichedCohorts = cohorts.map((c) => {
     const memberIds = membersByCohort.get(c.id) ?? [];
     const students = memberIds.map((id) => studentById.get(id)).filter(Boolean) as ProfileRow[];
@@ -58,13 +70,24 @@ async function CohortData() {
           (students.length * totalLessons) * 100
         )
       : 0;
-    const instr = instructorById.get(c.instructor_id);
+    const fromJunction = instructorIdsByCohort.get(c.id) ?? [];
+    const primary = c.instructor_id;
+    const instructor_ids =
+      fromJunction.length > 0
+        ? [primary, ...fromJunction.filter((id) => id !== primary)]
+        : [primary];
+    const instructorNamesDisplay = instructor_ids
+      .map((id) => instructorById.get(id))
+      .filter(Boolean)
+      .map((p) => p!.full_name || p!.email)
+      .join(", ") || "Unknown";
     return {
       id: c.id,
       name: c.name,
       description: c.description,
       instructor_id: c.instructor_id,
-      instructorName: instr?.full_name || instr?.email || "Unknown",
+      instructor_ids,
+      instructorNamesDisplay,
       created_at: c.created_at,
       students,
       avgPct,

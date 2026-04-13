@@ -113,7 +113,7 @@ $$;
 -- 9. RLS Policies
 CREATE POLICY "Users can view own profile"       ON public.profiles FOR SELECT USING (id = auth.uid());
 CREATE POLICY "Admins can view all profiles"     ON public.profiles FOR SELECT USING (public.get_user_role() = 'admin');
-CREATE POLICY "Users can update own profile"     ON public.profiles FOR UPDATE USING (id = auth.uid()) WITH CHECK (id = auth.uid());
+CREATE POLICY "Users can update own profile"     ON public.profiles FOR UPDATE TO authenticated USING (id = auth.uid()) WITH CHECK (id = auth.uid());
 CREATE POLICY "Admins can update any profile"    ON public.profiles FOR UPDATE USING (public.get_user_role() = 'admin');
 
 CREATE POLICY "Authenticated users can view courses" ON public.courses FOR SELECT USING (auth.uid() IS NOT NULL);

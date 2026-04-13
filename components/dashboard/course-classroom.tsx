@@ -21,6 +21,8 @@ import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
 import { parseLessonContent } from "@/lib/lesson-content";
+import { LessonVideoPlayer } from "@/components/dashboard/lesson-video-player";
+import { MaterialVideoCard } from "@/components/dashboard/material-video-card";
 import { LessonSidebarList } from "@/components/dashboard/lesson-sidebar-list";
 import { LessonNavigation } from "@/components/dashboard/lesson-navigation";
 import { UploadForm } from "@/components/dashboard/upload-form";
@@ -34,11 +36,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, LoadingLink } from "@/components/ui/button";
 import type {
   Course,
   CoursePillar,
   Lesson,
+  LessonMaterial,
   Submission,
 } from "@/lib/types/database";
 
@@ -117,6 +120,16 @@ const PILLAR_MATERIALS: Record<
       name: "LinkedIn Profile Tips",
       type: "WEB",
       url: "https://www.linkedin.com/help/linkedin/answer/a554351",
+    },
+    {
+      name: "PowerPoint Help & Training",
+      type: "WEB",
+      url: "https://support.microsoft.com/powerpoint",
+    },
+    {
+      name: "Google Slides Help",
+      type: "WEB",
+      url: "https://support.google.com/docs/topic/9054603",
     },
   ],
   "Life Skills": [
@@ -220,6 +233,23 @@ export async function CourseClassroom({
   const activeLesson = lessonId
     ? lessonList.find((l) => l.id === lessonId)
     : lessonList[0];
+
+  const { data: matsData } =
+    lessonList.length > 0
+      ? await supabase
+          .from("lesson_materials")
+          .select("*")
+          .in(
+            "lesson_id",
+            lessonList.map((l) => l.id)
+          )
+          .order("order_index", { ascending: true })
+      : { data: [] as LessonMaterial[] };
+
+  const allLessonMaterials = (matsData ?? []) as LessonMaterial[];
+  const dbMaterialsForActive = activeLesson
+    ? allLessonMaterials.filter((m) => m.lesson_id === activeLesson.id)
+    : [];
 
   const {
     data: { user },
@@ -380,7 +410,26 @@ export async function CourseClassroom({
     : null;
 
   const materials =
-    PILLAR_MATERIALS[typedCourse.pillar] ?? PILLAR_MATERIALS["Digital Literacy"] ?? [];
+    dbMaterialsForActive.length > 0
+      ? dbMaterialsForActive.map((m) => ({
+          id: m.id,
+          name: m.title,
+          type: m.kind.toUpperCase(),
+          url: m.url,
+          kind: m.kind,
+          thumbnailUrl: m.thumbnail_url,
+        }))
+      : (PILLAR_MATERIALS[typedCourse.pillar] ??
+          PILLAR_MATERIALS["Digital Literacy"] ??
+          []
+        ).map((x, i) => ({
+          id: `pillar-${typedCourse.pillar}-${i}`,
+          name: x.name,
+          type: x.type,
+          url: x.url,
+          kind: "link" as const,
+          thumbnailUrl: null as string | null,
+        }));
 
   const activeLessonNumber = activeLesson
     ? lessonList.findIndex((l) => l.id === activeLesson.id) + 1
@@ -528,19 +577,9 @@ export async function CourseClassroom({
             <div className="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6 lg:p-8">
 
               {/* ── Video player ───────────────────────────── */}
-              {resolvedVideoId && (
-                <div className="overflow-hidden rounded-2xl bg-black shadow-ambient ring-1 ring-border/50">
-                  <div className="aspect-video w-full">
-                    <iframe
-                      className="h-full w-full"
-                      src={`https://www.youtube.com/embed/${resolvedVideoId}?rel=0`}
-                      title="Lesson video"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                </div>
-              )}
+              {resolvedVideoId ? (
+                <LessonVideoPlayer videoId={resolvedVideoId} />
+              ) : null}
 
               {/* ── Lesson header ───────────────────────────── */}
               <div className="space-y-4">
@@ -588,13 +627,13 @@ export async function CourseClassroom({
                     />
                   )}
                   {nextAdjacentLesson && (
-                    <Link
+                    <LoadingLink
                       href={`/dashboard/student/courses/${courseId}/lessons/${nextAdjacentLesson.id}`}
                       className="inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-[#f0f7f5] transition-opacity hover:opacity-90"
                     >
                       Next Lesson
                       <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    </LoadingLink>
                   )}
                   {resolvedVideoId && (
                     <a
@@ -691,10 +730,10 @@ export async function CourseClassroom({
                   </ul>
                 </div>
 
-                {/* Practical Assignment + Submit — side by side */}
-                <div className="grid gap-4 sm:grid-cols-2">
+                {/* Practical Assignment (top) + Submit Your Work (below) */}
+                <div className="flex flex-col gap-4">
                   {/* Practical Assignment */}
-                  <div className="flex flex-col rounded-2xl bg-card p-5 ring-1 ring-border/70 shadow-ambient">
+                  <div className="flex w-full flex-col rounded-2xl bg-card p-5 ring-1 ring-border/70 shadow-ambient">
                     <div className="mb-3 flex items-center gap-2">
                       <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary`}>
                         <FileText className={`h-4 w-4 ${theme.icon}`} />
@@ -736,7 +775,7 @@ export async function CourseClassroom({
                   </div>
 
                   {/* Submit Your Work */}
-                  <div className="flex flex-col rounded-2xl bg-card p-5 ring-1 ring-border/70 shadow-ambient">
+                  <div className="flex w-full flex-col rounded-2xl bg-card p-5 ring-1 ring-border/70 shadow-ambient">
                     <div className="mb-3 flex items-center gap-2">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary">
                         <UploadCloud className={`h-4 w-4 ${theme.icon}`} />
@@ -834,12 +873,10 @@ export async function CourseClassroom({
                           </p>
                         )}
                       </div>
-                      <Button asChild size="sm" className="shrink-0">
-                        <Link href={guideHref}>
-                          Go next
-                          <ArrowRight className="ml-1 h-4 w-4" />
-                        </Link>
-                      </Button>
+                      <LoadingLink href={guideHref} size="sm" className="shrink-0">
+                        Go next
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </LoadingLink>
                     </div>
                   </div>
                 )}
@@ -861,29 +898,38 @@ export async function CourseClassroom({
                   </div>
 
                   <div className="rounded-2xl bg-muted/40 p-3">
-                    <div className="space-y-1">
-                      {materials.map((mat, i) => (
-                        <a
-                          key={i}
-                          href={mat.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-card"
-                        >
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-muted-foreground ring-1 ring-border/60 transition-colors group-hover:text-primary">
-                            <FileText className="h-4 w-4" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-semibold text-foreground group-hover:text-primary">
-                              {mat.name}
-                            </p>
-                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                              {mat.type}
-                            </p>
-                          </div>
-                          <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-primary" />
-                        </a>
-                      ))}
+                    <div className="space-y-2">
+                      {materials.map((mat) =>
+                        mat.kind === "video" ? (
+                          <MaterialVideoCard
+                            key={mat.id}
+                            title={mat.name}
+                            url={mat.url}
+                            thumbnailUrl={mat.thumbnailUrl}
+                          />
+                        ) : (
+                          <a
+                            key={mat.id}
+                            href={mat.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-card"
+                          >
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-muted-foreground ring-1 ring-border/60 transition-colors group-hover:text-primary">
+                              <FileText className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-xs font-semibold text-foreground group-hover:text-primary">
+                                {mat.name}
+                              </p>
+                              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                                {mat.type}
+                              </p>
+                            </div>
+                            <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-primary" />
+                          </a>
+                        )
+                      )}
                     </div>
                   </div>
                 </section>
@@ -902,9 +948,13 @@ export async function CourseClassroom({
                 <p className="mt-1 text-sm text-muted-foreground">
                   Lessons will appear once an instructor adds them.
                 </p>
-                <Button variant="outline" className="mt-4 rounded-xl" asChild>
-                  <Link href="/dashboard/student/catalog">Back to catalog</Link>
-                </Button>
+                <LoadingLink
+                  href="/dashboard/student/catalog"
+                  variant="outline"
+                  className="mt-4 rounded-xl"
+                >
+                  Back to catalog
+                </LoadingLink>
               </div>
             </div>
           )}

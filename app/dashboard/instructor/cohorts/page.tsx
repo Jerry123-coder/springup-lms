@@ -42,12 +42,16 @@ export default function CohortsPage() {
       if (!user) return;
       setUserId(user.id);
 
-      const [cohortsRes, studentsRes] = await Promise.all([
+      const [primaryRes, coRes, studentsRes] = await Promise.all([
         supabase
           .from("cohorts")
           .select("id, name, description, created_at")
           .eq("instructor_id", user.id)
           .order("created_at", { ascending: false }),
+        supabase
+          .from("cohort_instructors")
+          .select("cohort_id")
+          .eq("instructor_id", user.id),
         supabase
           .from("profiles")
           .select("id, full_name, email")
@@ -55,7 +59,26 @@ export default function CohortsPage() {
           .order("full_name", { ascending: true }),
       ]);
 
-      const rawCohorts = (cohortsRes.data ?? []) as Cohort[];
+      const primary = (primaryRes.data ?? []) as Cohort[];
+      const primaryIds = new Set(primary.map((c) => c.id));
+      const coRows = coRes.error
+        ? []
+        : ((coRes.data ?? []) as { cohort_id: string }[]);
+      const coCohortIds = [...new Set(coRows.map((r) => r.cohort_id))];
+      const onlyCo = coCohortIds.filter((id) => !primaryIds.has(id));
+      let extra: Cohort[] = [];
+      if (onlyCo.length > 0) {
+        const { data: ex } = await supabase
+          .from("cohorts")
+          .select("id, name, description, created_at")
+          .in("id", onlyCo)
+          .order("created_at", { ascending: false });
+        extra = (ex ?? []) as Cohort[];
+      }
+      const rawCohorts = [...primary, ...extra].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
       // Count students per cohort
       const enriched = await Promise.all(
         rawCohorts.map(async (c) => {
@@ -95,6 +118,10 @@ export default function CohortsPage() {
       }
 
       const cohort = newCohort as Cohort;
+
+      await (supabase.from("cohort_instructors" as never) as unknown as {
+        insert: (v: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+      }).insert({ cohort_id: cohort.id, instructor_id: userId });
 
       if (selectedStudentIds.length > 0) {
         const rows = selectedStudentIds.map((sid) => ({ cohort_id: cohort.id, student_id: sid }));

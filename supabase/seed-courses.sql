@@ -57,12 +57,14 @@ INSERT INTO public.courses (id, title, pillar, category, description) VALUES
    'Digital Literacy', 'Excel',
    'Build real spreadsheets: rosters, budgets, security dashboards and data reports.'),
   ('c0dec003-face-4ade-babe-deadbeef0003',
-   'Presentation Slides (PowerPoint & Google Slides)',
-   'Digital Literacy', 'Slides',
-   'Design clear, confident slide decks that tell your story and communicate your ideas.')
+   'Presentation Design (PowerPoint & Google Slides)',
+   'Career Readiness', 'Slides',
+   'A full presentation-design course: layouts, visuals, storytelling, and confident delivery — as its own credential alongside prompt engineering and career skills.')
 ON CONFLICT (id) DO UPDATE
   SET title       = EXCLUDED.title,
-      description = EXCLUDED.description;
+      description = EXCLUDED.description,
+      pillar      = EXCLUDED.pillar,
+      category    = EXCLUDED.category;
 
 -- ── Microsoft Word (5 lessons) ───────────────────────────────
 INSERT INTO public.lessons (course_id, title, content, order_index) VALUES
@@ -431,7 +433,7 @@ A job search tracker spreadsheet:
 > Save as `job-search-tracker.xlsx` and upload.', 5);
 
 
--- ── Presentation Slides (5 lessons) ─────────────────────────
+-- ── Presentation Design — Career Readiness pillar (5 lessons) ──
 INSERT INTO public.lessons (course_id, title, content, order_index) VALUES
 
 ('c0dec003-face-4ade-babe-deadbeef0003',
@@ -1473,7 +1475,7 @@ CREATE TABLE IF NOT EXISTS public.learning_block_courses (
 INSERT INTO public.learning_paths (id, title, description) VALUES
   ('fade1ace-cafe-4bae-beef-c0de00000001',
    'Digital Foundations Path',
-   'The core digital literacy journey: documents → spreadsheets → presentations. Complete this path to be office-ready.')
+   'Core office skills: professional documents and spreadsheets. Add the Career Launch path for presentation design, AI prompts, and visual branding.')
 ON CONFLICT (id) DO NOTHING;
 
 DELETE FROM public.learning_block_courses
@@ -1494,49 +1496,51 @@ INSERT INTO public.learning_blocks (id, path_id, title, subtitle, order_index) V
   ('b10c0001-fade-4ace-beef-c0de00000001', 'fade1ace-cafe-4bae-beef-c0de00000001',
    'Word Processing',         'Create CVs, letters and professional documents.',   1),
   ('b10c0002-fade-4ace-beef-c0de00000002', 'fade1ace-cafe-4bae-beef-c0de00000001',
-   'Spreadsheets',            'Organise data, build dashboards, track anything.',   2),
-  ('b10c0003-fade-4ace-beef-c0de00000003', 'fade1ace-cafe-4bae-beef-c0de00000001',
-   'Presentations',           'Design clear slides and speak with confidence.',      3)
+   'Spreadsheets',            'Organise data, build dashboards, track anything.',   2)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.learning_block_courses (block_id, course_id, order_index) VALUES
   ('b10c0001-fade-4ace-beef-c0de00000001', 'c0dec001-face-4ade-babe-deadbeef0001', 1),
-  ('b10c0002-fade-4ace-beef-c0de00000002', 'c0dec002-face-4ade-babe-deadbeef0002', 1),
-  ('b10c0003-fade-4ace-beef-c0de00000003', 'c0dec003-face-4ade-babe-deadbeef0003', 1)
+  ('b10c0002-fade-4ace-beef-c0de00000002', 'c0dec002-face-4ade-babe-deadbeef0002', 1)
 ON CONFLICT (block_id, course_id) DO NOTHING;
 
 -- ── Path 2: Career Launch ─────────────────────────────────────
 INSERT INTO public.learning_paths (id, title, description) VALUES
   ('fade2ace-cafe-4bae-beef-c0de00000002',
    'Career Launch Path',
-   'Build the professional skills to find and keep a job: communication, AI tools, and visual design.')
+   'Professional communication, presentation design (slides), prompt engineering with AI, and Canva — the full career pillar.')
 ON CONFLICT (id) DO NOTHING;
 
 DELETE FROM public.learning_block_courses
   WHERE block_id IN (
     'b20c0001-fade-4ace-beef-c0de00000001',
     'b20c0002-fade-4ace-beef-c0de00000002',
-    'b20c0003-fade-4ace-beef-c0de00000003'
+    'b20c0003-fade-4ace-beef-c0de00000003',
+    'b20c0004-fade-4ace-beef-c0de00000004'
   );
 
 DELETE FROM public.learning_blocks
   WHERE id IN (
     'b20c0001-fade-4ace-beef-c0de00000001',
     'b20c0002-fade-4ace-beef-c0de00000002',
-    'b20c0003-fade-4ace-beef-c0de00000003'
+    'b20c0003-fade-4ace-beef-c0de00000003',
+    'b20c0004-fade-4ace-beef-c0de00000004'
   );
 
 INSERT INTO public.learning_blocks (id, path_id, title, subtitle, order_index) VALUES
   ('b20c0001-fade-4ace-beef-c0de00000001', 'fade2ace-cafe-4bae-beef-c0de00000002',
-   'Communication & Presentation', 'Present yourself, interview well, build relationships.', 1),
+   'Professional Communication',    'Present yourself, interview well, build relationships.', 1),
+  ('b20c0004-fade-4ace-beef-c0de00000004', 'fade2ace-cafe-4bae-beef-c0de00000002',
+   'Presentation Design',           'PowerPoint & Google Slides — layouts, visuals, storytelling.', 2),
   ('b20c0002-fade-4ace-beef-c0de00000002', 'fade2ace-cafe-4bae-beef-c0de00000002',
-   'AI & Prompt Engineering',       'Use AI tools to work smarter and faster.',              2),
+   'Prompt Engineering with AI',    'Use ChatGPT and similar tools to work smarter and faster.', 3),
   ('b20c0003-fade-4ace-beef-c0de00000003', 'fade2ace-cafe-4bae-beef-c0de00000002',
-   'Graphic Design with Canva',      'Create a standout CV, poster, and personal brand.',    3)
+   'Graphic Design with Canva',     'Create a standout CV, poster, and personal brand.', 4)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.learning_block_courses (block_id, course_id, order_index) VALUES
   ('b20c0001-fade-4ace-beef-c0de00000001', 'c0dec201-cafe-4ade-babe-deadbeef0201', 1),
+  ('b20c0004-fade-4ace-beef-c0de00000004', 'c0dec003-face-4ade-babe-deadbeef0003', 1),
   ('b20c0002-fade-4ace-beef-c0de00000002', 'c0dec202-cafe-4ade-babe-deadbeef0202', 1),
   ('b20c0003-fade-4ace-beef-c0de00000003', 'c0dec203-cafe-4ade-babe-deadbeef0203', 1)
 ON CONFLICT (block_id, course_id) DO NOTHING;

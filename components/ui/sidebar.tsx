@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -235,7 +235,12 @@ const Sidebar = React.forwardRef<
               <SheetTitle>Sidebar</SheetTitle>
               <SheetDescription>Navigation sidebar.</SheetDescription>
             </SheetHeader>
-            <div className="flex h-full w-full flex-col">{children}</div>
+            <div
+              id="dashboard-sidebar-nav"
+              className="flex h-full w-full flex-col"
+            >
+              {children}
+            </div>
           </SheetContent>
         </Sheet>
       );
@@ -294,7 +299,7 @@ const SidebarTrigger = React.forwardRef<
   React.ComponentRef<typeof Button>,
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar, state } = useSidebar();
+  const { toggleSidebar, state, isMobile, openMobile } = useSidebar();
 
   return (
     <Button
@@ -303,14 +308,28 @@ const SidebarTrigger = React.forwardRef<
       variant="ghost"
       size="icon"
       className={cn("h-7 w-7", className)}
+      aria-expanded={isMobile ? openMobile : undefined}
+      aria-controls={isMobile ? "dashboard-sidebar-nav" : undefined}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
       }}
       {...props}
     >
-      {state === "collapsed" ? <ChevronRight /> : <ChevronLeft />}
-      <span className="sr-only">Toggle Sidebar</span>
+      {isMobile ? (
+        openMobile ? (
+          <X className="h-4 w-4" aria-hidden />
+        ) : (
+          <Menu className="h-4 w-4" aria-hidden />
+        )
+      ) : state === "collapsed" ? (
+        <ChevronRight />
+      ) : (
+        <ChevronLeft />
+      )}
+      <span className="sr-only">
+        {isMobile ? (openMobile ? "Close menu" : "Open menu") : "Toggle sidebar"}
+      </span>
     </Button>
   );
 });

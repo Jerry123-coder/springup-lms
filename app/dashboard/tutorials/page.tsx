@@ -27,9 +27,9 @@ const tutorials: VideoTutorial[] = [
   },
   {
     id: "3",
-    title: "Creating Presentations That Stand Out",
+    title: "Presentation Design: Slides That Stand Out",
     description:
-      "Design clean, professional slides using Google Slides or PowerPoint. Learn layout principles, colour, and storytelling with visuals.",
+      "Full presentation-design skills: Google Slides or PowerPoint, layout, colour, visuals, and storytelling — as in the dedicated Career Readiness course.",
     duration: "10:45",
     instructor: "Phoebe France",
     pillar: "Career Readiness",
