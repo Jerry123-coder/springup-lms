@@ -5,7 +5,7 @@ import { AdminInviteUserDialog } from "@/components/dashboard/admin-invite-user-
 import { RoleSelector } from "@/components/dashboard/role-selector";
 import { StudentInstructorAssign } from "@/components/dashboard/student-instructor-assign";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingLink } from "@/components/ui/loading-link";
+import { LoadingLink } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
 import type { Profile } from "@/lib/types/database";
 

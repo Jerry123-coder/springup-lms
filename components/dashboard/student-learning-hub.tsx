@@ -11,7 +11,7 @@ import {
 
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
-import { LoadingLink } from "@/components/ui/loading-link";
+import { LoadingLink } from "@/components/ui/button";
 
 function firstName(fullName: string | null | undefined, email: string | null | undefined) {
   if (fullName?.trim()) {

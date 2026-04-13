@@ -4,8 +4,7 @@ import { useRef } from "react";
 import { ArrowRight, Heart, Sparkles } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
-import { Button } from "@/components/ui/button";
-import { LoadingLink } from "@/components/ui/loading-link";
+import { Button, LoadingLink } from "@/components/ui/button";
 import { SupportDrawer } from "@/components/marketing/support-drawer";
 import { SpringLogo } from "@/components/marketing/spring-logo";
 

@@ -1,6 +1,6 @@
 import { ArrowLeft, AlertCircle, CheckCircle2, GraduationCap } from "lucide-react";
 
-import { LoadingLink } from "@/components/ui/loading-link";
+import { LoadingLink } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import {
   Card,

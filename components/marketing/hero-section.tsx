@@ -6,8 +6,7 @@ import { motion, useMotionValue, useTransform, animate, useSpring } from "framer
 
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
-import { LoadingLink } from "@/components/ui/loading-link";
+import { Button, LoadingLink } from "@/components/ui/button";
 
 // ── Floating orb ─────────────────────────────────────────────────
 function Orb({ x, y, size, color, delay }: { x: string; y: string; size: number; color: string; delay: number }) {

@@ -3,8 +3,7 @@ import { ArrowRight, BookOpen, CheckCircle2, Circle } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { LoadingLink } from "@/components/ui/loading-link";
+import { Button, LoadingLink } from "@/components/ui/button";
 import type { Course, CoursePillar, Lesson } from "@/lib/types/database";
 
 const pillarOrder: CoursePillar[] = [
