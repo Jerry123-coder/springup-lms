@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { AuthCodeRedirect } from "@/components/auth/auth-code-redirect";
 
 /**
  * Self-hosted variable fonts (via @fontsource-variable/*) — no request to
@@ -51,6 +52,7 @@ export default function RootLayout({
           storageKey="springup-theme"
           disableTransitionOnChange
         >
+          <AuthCodeRedirect />
           {children}
           <Toaster richColors position="top-right" />
         </ThemeProvider>

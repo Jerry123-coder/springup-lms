@@ -88,7 +88,9 @@ export async function requestPasswordReset(formData: FormData) {
   }
 
   const siteUrl = getSiteUrl();
-  const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent("/login/update-password")}`;
+  // Full callback URL + next + purpose so recovery survives Supabase redirects; add this URL to
+  // Supabase → Auth → URL Configuration → Redirect allow list (incl. http://localhost:3000/auth/callback).
+  const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent("/login/update-password")}&purpose=recovery`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,
