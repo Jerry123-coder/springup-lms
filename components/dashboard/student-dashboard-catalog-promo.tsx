@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Library } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 
 /**
  * stitch: restructured_learning_hub_web — bridge from main_dashboard to full catalog.
